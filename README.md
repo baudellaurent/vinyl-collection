@@ -102,20 +102,20 @@ apt-get install -y docker-compose-plugin
 
 ```bash
 # From your local machine
-scp -r vinyl-collection/ root@your-server-ip:/opt/vinyl-collection
+scp -r vinyl-collection/ root@your-server-ip:/home/vinyl-collection
 ```
 
 Or use git:
 
 ```bash
 ssh root@your-server-ip
-git clone <your-repo> /opt/vinyl-collection
+git clone <your-repo> /home/vinyl-collection
 ```
 
 ### 4. Configure environment
 
 ```bash
-cd /opt/vinyl-collection
+cd /home/vinyl-collection
 cp .env.example .env
 nano .env   # Fill in all values, set DOMAIN=yourdomain.com
 ```
@@ -171,7 +171,7 @@ Add a cron job on the host:
 ```bash
 crontab -e
 # Add:
-0 3 * * * certbot renew --quiet && docker compose -f /opt/vinyl-collection/docker-compose.yml restart nginx
+0 3 * * * certbot renew --quiet && docker compose -f /home/vinyl-collection/docker-compose.yml restart nginx
 ```
 
 ---
