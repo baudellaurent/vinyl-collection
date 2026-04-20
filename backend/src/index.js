@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const collectionRoutes = require('./routes/collection');
 const searchRoutes = require('./routes/search');
 const discographyRoutes = require('./routes/discography');
+const maintenanceRoutes = require('./routes/maintenance');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -46,6 +47,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/collection', collectionRoutes);
 app.use('/api/search', apiLimiter, searchRoutes);
 app.use('/api/discography', apiLimiter, discographyRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 // 404 handler
 app.use((req, res) => {
