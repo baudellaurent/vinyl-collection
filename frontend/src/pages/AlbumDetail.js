@@ -20,16 +20,17 @@ function AlbumDetail() {
     async function checkCollection() {
       try {
         const data = await getCollection();
+        const albumDiscogsId = String(id || album?.id || album?.discogs_id || '');
         const found = data.vinyls?.find(
-          (v) => v.discogs_id === id ||
-                 v.discogs_id === album?.id ||
-                 v.discogs_id === String(album?.id) ||
-                 v.barcode === album?.barcode
+          (v) => String(v.discogs_id) === albumDiscogsId
         );
         if (found) {
           setInCollection(true);
           setCollectionId(found.id);
-          setAlbum((prev) => ({ ...prev, ...found }));
+          // Only merge non-conflicting fields (don't overwrite title/artist from state)
+          if (!album?.title) {
+            setAlbum(found);
+          }
         } else {
           setInCollection(false);
         }
@@ -40,7 +41,7 @@ function AlbumDetail() {
       }
     }
     checkCollection();
-  }, [id, album?.id]);
+  }, [id]);
 
   const handleAdd = async () => {
     if (!album) return;
