@@ -33,11 +33,17 @@ router.get('/:artistName', async (req, res, next) => {
     }
 
     // Cross-reference with user's collection by discogs_id OR master_id
-    const userCollection = await query(
-      'SELECT discogs_id, master_id FROM vinyls WHERE discogs_id IS NOT NULL OR master_id IS NOT NULL'
-    );
-    const collectionDiscogsIds = new Set(userCollection.rows.map((r) => r.discogs_id).filter(Boolean));
-    const collectionMasterIds = new Set(userCollection.rows.map((r) => r.master_id).filter(Boolean));
+    // In test mode, collection is empty
+    let collectionDiscogsIds = new Set();
+    let collectionMasterIds = new Set();
+
+    if (req.authMode !== 'test') {
+      const userCollection = await query(
+        'SELECT discogs_id, master_id FROM vinyls WHERE discogs_id IS NOT NULL OR master_id IS NOT NULL'
+      );
+      collectionDiscogsIds = new Set(userCollection.rows.map((r) => r.discogs_id).filter(Boolean));
+      collectionMasterIds = new Set(userCollection.rows.map((r) => r.master_id).filter(Boolean));
+    }
 
     const ranked = releases.map((release, index) => ({
       rank: (pageNum - 1) * 8 + index + 1,
