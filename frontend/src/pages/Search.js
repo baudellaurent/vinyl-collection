@@ -115,6 +115,7 @@ function Search() {
     try {
       await addToCollection({
         discogs_id: result.id,
+        master_id: result.master_id || null,
         title: result.title,
         artist: result.artist,
         year: result.year,

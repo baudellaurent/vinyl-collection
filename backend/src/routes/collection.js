@@ -1,9 +1,36 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const axios = require('axios');
 const { query } = require('../db');
 
 router.use(auth);
+
+/**
+ * Fetch master_id from Discogs for a given release ID (async, non-blocking).
+ */
+async function fetchAndSaveMasterId(vinylId, discogsId) {
+  try {
+    await new Promise((r) => setTimeout(r, 500));
+    const response = await axios.get(
+      `https://api.discogs.com/releases/${discogsId}`,
+      {
+        params: { token: process.env.DISCOGS_TOKEN },
+        headers: { 'User-Agent': 'VinylCollection/1.0' },
+        timeout: 8000,
+      }
+    );
+    const masterId = response.data.master_id;
+    if (masterId) {
+      await query('UPDATE vinyls SET master_id = $1 WHERE id = $2', [String(masterId), vinylId]);
+    } else {
+      // No master (single/EP) — use discogs_id as master_id
+      await query('UPDATE vinyls SET master_id = $1 WHERE id = $2', [discogsId, vinylId]);
+    }
+  } catch (err) {
+    console.error(`Failed to fetch master_id for vinyl ${vinylId}:`, err.message);
+  }
+}
 
 /**
  * GET /api/collection
@@ -106,6 +133,12 @@ router.post('/', async (req, res, next) => {
     );
 
     res.status(201).json({ vinyl: result.rows[0] });
+
+    // If no master_id provided, fetch it asynchronously from Discogs
+    if (!master_id && discogs_id) {
+      const newId = result.rows[0].id;
+      fetchAndSaveMasterId(newId, discogs_id); // fire and forget
+    }
   } catch (err) {
     // Handle unique constraint violations gracefully
     if (err.code === '23505') {
