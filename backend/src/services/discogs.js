@@ -63,17 +63,19 @@ async function searchByBarcode(barcode) {
 /**
  * Search Discogs by artist and album name.
  * Searches masters first (original releases), falls back to releases.
+ * Filters to vinyl formats only.
  * @param {string} artist
  * @param {string} album
  * @returns {Promise<Array>} Top 5 normalized release objects
  */
 async function searchByArtistAlbum(artist, album) {
-  // Search masters first — these are original releases, no duplicates per country
+  // Search masters first — original releases, no country duplicates
   const masterResponse = await client.get('/database/search', {
     params: {
       artist,
       release_title: album,
       type: 'master',
+      format: 'Vinyl',
       token: TOKEN,
     },
   });
@@ -83,20 +85,19 @@ async function searchByArtistAlbum(artist, album) {
     return masters.slice(0, 5).map(normalizeRelease);
   }
 
-  // Fall back to releases if not enough masters found
+  // Fall back to vinyl releases if not enough masters
   const releaseResponse = await client.get('/database/search', {
     params: {
       artist,
       release_title: album,
       type: 'release',
-      // Prefer original/US/UK releases
-      country: '',
+      format: 'Vinyl',
       token: TOKEN,
     },
   });
   const releases = releaseResponse.data.results || [];
 
-  // Merge masters + releases, deduplicate by title+artist, limit to 5
+  // Merge masters + releases, deduplicate by title+year, limit to 5
   const combined = [...masters, ...releases];
   const seen = new Set();
   const deduped = combined.filter((r) => {
