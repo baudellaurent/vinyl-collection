@@ -5,7 +5,6 @@ import { useSettings } from '../context/SettingsContext';
 
 function SearchResultItem({ result, onAdd, onRemove, isAdding, isRemoving }) {
   const navigate = useNavigate();
-
   return (
     <div className="search-result-item">
       {result.cover_url ? (
@@ -69,6 +68,7 @@ function SearchResultItem({ result, onAdd, onRemove, isAdding, isRemoving }) {
 
 function Search() {
   const { settings } = useSettings();
+  const navigate = useNavigate();
   const [artist, setArtist] = useState('');
   const [album, setAlbum] = useState('');
   const [results, setResults] = useState([]);
@@ -99,6 +99,13 @@ function Search() {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!artist.trim() && !album.trim()) return;
+
+    // If only artist is provided, redirect to discography
+    if (artist.trim() && !album.trim()) {
+      navigate(`/discography/${encodeURIComponent(artist.trim())}`);
+      return;
+    }
+
     doSearch(1);
   };
 
@@ -146,10 +153,7 @@ function Search() {
       <header className="page-header">
         <h1 className="page-title">🔍 Recherche</h1>
         <p className="page-subtitle">
-          {settings.country ? `Éditions ${settings.country}` : 'Tous pays'} · {
-            settings.sortOrder === 'date' ? 'Tri par date' :
-            settings.sortOrder === 'weighted' ? 'Tri par note' : 'Tri par pertinence'
-          }
+          Artiste seul → discographie complète · Artiste + Album → recherche Discogs
         </p>
       </header>
 
