@@ -35,9 +35,9 @@ export async function searchBarcode(barcode) {
 }
 
 /** Search Discogs by artist and/or album name. */
-export async function searchQuery(artist = '', album = '', country = '', page = 1) {
+export async function searchQuery(artist = '', album = '', country = '', page = 1, sortOrder = 'relevance') {
   const { data } = await api.get('/search/query', {
-    params: { artist, album, country, page },
+    params: { artist, album, country, page, sortOrder },
   });
   return data;
 }
@@ -67,8 +67,10 @@ export async function checkBarcode(barcode) {
 }
 
 /** Get artist discography ranked by weighted rating. */
-export async function getDiscography(artistName) {
-  const { data } = await api.get(`/discography/${encodeURIComponent(artistName)}`);
+export async function getDiscography(artistName, page = 1, sortOrder = 'weighted') {
+  const { data } = await api.get(`/discography/${encodeURIComponent(artistName)}`, {
+    params: { page, sortOrder },
+  });
   return data;
 }
 

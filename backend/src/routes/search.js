@@ -59,11 +59,11 @@ router.get('/barcode/:barcode', async (req, res, next) => {
 });
 
 /**
- * GET /api/search/query?artist=&album=&country=&page=
+ * GET /api/search/query?artist=&album=&country=&page=&sortOrder=
  */
 router.get('/query', async (req, res, next) => {
   try {
-    const { artist, album, country, page } = req.query;
+    const { artist, album, country, page, sortOrder } = req.query;
 
     if (!artist && !album) {
       return res.status(400).json({ error: 'Provide at least artist or album query parameter' });
@@ -71,15 +71,27 @@ router.get('/query', async (req, res, next) => {
 
     const pageNum = Math.max(1, parseInt(page) || 1);
 
-    const results = await discogs.searchByArtistAlbum(
+    let results = await discogs.searchByArtistAlbum(
       artist || '',
       album || '',
       country || '',
       pageNum
     );
 
+    // Apply sort order
+    if (sortOrder === 'date') {
+      results = results.sort((a, b) => (a.year || 9999) - (b.year || 9999));
+    } else if (sortOrder === 'weighted') {
+      results = results.sort((a, b) => {
+        const scoreA = (a.rating || 0) * Math.log(1 + (a.rating_count || 0));
+        const scoreB = (b.rating || 0) * Math.log(1 + (b.rating_count || 0));
+        return scoreB - scoreA;
+      });
+    }
+    // 'relevance' = keep Discogs order
+
     if (results.length === 0) {
-      return res.json({ results: [] });
+      return res.json({ results: [], page: pageNum, hasMore: false });
     }
 
     const discogsIds = results.map((r) => r.id).filter(Boolean);
