@@ -82,7 +82,7 @@ async function searchByArtistAlbum(artist, album) {
   const masters = masterResponse.data.results || [];
 
   if (masters.length >= 3) {
-    return masters.slice(0, 5).map(normalizeRelease);
+    return masters.slice(0, 8).map(normalizeRelease);
   }
 
   // Fall back to vinyl releases if not enough masters
@@ -97,17 +97,22 @@ async function searchByArtistAlbum(artist, album) {
   });
   const releases = releaseResponse.data.results || [];
 
-  // Merge masters + releases, deduplicate by title+year, limit to 5
+  // Merge masters + releases, deduplicate by normalized title+year, limit to 8
   const combined = [...masters, ...releases];
   const seen = new Set();
   const deduped = combined.filter((r) => {
-    const key = `${r.title}|${r.year}`;
+    // Normalize: remove "Artist - " prefix, lowercase, trim
+    const normalizedTitle = (r.title || '')
+      .replace(/^[^-]+ - /i, '')
+      .toLowerCase()
+      .trim();
+    const key = `${normalizedTitle}|${r.year || ''}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 
-  return deduped.slice(0, 5).map(normalizeRelease);
+  return deduped.slice(0, 8).map(normalizeRelease);
 }
 
 /**
