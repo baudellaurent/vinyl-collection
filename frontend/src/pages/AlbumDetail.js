@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { addToCollection, removeFromCollection, getCollection } from '../services/api';
+import { addToCollection, removeFromCollection, removeFromCollectionByDiscogsId, getCollection } from '../services/api';
 
 function AlbumDetail() {
   const { id } = useParams();
@@ -8,7 +8,7 @@ function AlbumDetail() {
   const navigate = useNavigate();
 
   const [album, setAlbum] = useState(location.state?.album || null);
-  const [inCollection, setInCollection] = useState(false);
+  const [inCollection, setInCollection] = useState(location.state?.album?.inCollection || false);
   const [collectionId, setCollectionId] = useState(null);
   const [isLoading, setIsLoading] = useState(!location.state?.album);
   const [isActing, setIsActing] = useState(false);
@@ -21,13 +21,17 @@ function AlbumDetail() {
       try {
         const data = await getCollection();
         const found = data.vinyls?.find(
-          (v) => v.discogs_id === id || v.discogs_id === album?.id
+          (v) => v.discogs_id === id ||
+                 v.discogs_id === album?.id ||
+                 v.discogs_id === String(album?.id) ||
+                 v.barcode === album?.barcode
         );
         if (found) {
           setInCollection(true);
           setCollectionId(found.id);
-          // Merge collection data with album data
           setAlbum((prev) => ({ ...prev, ...found }));
+        } else {
+          setInCollection(false);
         }
       } catch (err) {
         console.error('Collection check failed:', err);
@@ -65,13 +69,17 @@ function AlbumDetail() {
   };
 
   const handleRemove = async () => {
-    if (!collectionId) return;
     if (!window.confirm('Retirer ce vinyle de votre collection ?')) return;
     setIsActing(true);
     setError(null);
     setSuccess(null);
     try {
-      await removeFromCollection(collectionId);
+      if (collectionId) {
+        await removeFromCollection(collectionId);
+      } else {
+        // Fallback: remove by discogs_id
+        await removeFromCollectionByDiscogsId(album.id || album.discogs_id);
+      }
       setInCollection(false);
       setCollectionId(null);
       setSuccess('Vinyle retiré de votre collection.');
