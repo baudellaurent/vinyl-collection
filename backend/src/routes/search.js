@@ -8,7 +8,6 @@ router.use(auth);
 
 /**
  * GET /api/search/barcode/:barcode
- * Search Discogs by barcode, check if already in collection.
  */
 router.get('/barcode/:barcode', async (req, res, next) => {
   try {
@@ -18,7 +17,6 @@ router.get('/barcode/:barcode', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid barcode format' });
     }
 
-    // Check collection by barcode OR discogs_id
     const collectionCheck = await query(
       'SELECT * FROM vinyls WHERE barcode = $1 LIMIT 1',
       [barcode]
@@ -26,7 +24,6 @@ router.get('/barcode/:barcode', async (req, res, next) => {
     const inCollection = collectionCheck.rows.length > 0;
     const existingVinyl = inCollection ? collectionCheck.rows[0] : null;
 
-    // Search Discogs
     let album = null;
     let found = false;
 
@@ -36,7 +33,6 @@ router.get('/barcode/:barcode', async (req, res, next) => {
         found = true;
         album = results[0];
 
-        // Also check by discogs_id if not found by barcode
         if (!inCollection && album.id) {
           const discogsCheck = await query(
             'SELECT * FROM vinyls WHERE discogs_id = $1 LIMIT 1',
@@ -56,24 +52,18 @@ router.get('/barcode/:barcode', async (req, res, next) => {
       console.error('Discogs barcode search error:', apiErr.message);
     }
 
-    res.json({
-      found,
-      inCollection,
-      album,
-      collectionEntry: existingVinyl,
-    });
+    res.json({ found, inCollection, album, collectionEntry: existingVinyl });
   } catch (err) {
     next(err);
   }
 });
 
 /**
- * GET /api/search/query?artist=&album=
- * Search Discogs by artist + album text, return results with inCollection flags.
+ * GET /api/search/query?artist=&album=&country=
  */
 router.get('/query', async (req, res, next) => {
   try {
-    const { artist, album } = req.query;
+    const { artist, album, country } = req.query;
 
     if (!artist && !album) {
       return res.status(400).json({ error: 'Provide at least artist or album query parameter' });
@@ -81,14 +71,14 @@ router.get('/query', async (req, res, next) => {
 
     const results = await discogs.searchByArtistAlbum(
       artist || '',
-      album || ''
+      album || '',
+      country || ''
     );
 
     if (results.length === 0) {
       return res.json({ results: [] });
     }
 
-    // Batch check which results are already in collection by discogs_id
     const discogsIds = results.map((r) => r.id).filter(Boolean);
     let inCollectionIds = new Set();
 

@@ -2,6 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchQuery, addToCollection, removeFromCollectionByDiscogsId } from '../services/api';
 
+const COUNTRIES = [
+  { value: '', label: '🌍 Tous les pays' },
+  { value: 'US', label: '🇺🇸 États-Unis' },
+  { value: 'UK', label: '🇬🇧 Royaume-Uni' },
+  { value: 'France', label: '🇫🇷 France' },
+  { value: 'Germany', label: '🇩🇪 Allemagne' },
+  { value: 'Canada', label: '🇨🇦 Canada' },
+  { value: 'Australia', label: '🇦🇺 Australie' },
+  { value: 'Japan', label: '🇯🇵 Japon' },
+];
+
 function SearchResultItem({ result, onAdd, onRemove, isAdding, isRemoving }) {
   const navigate = useNavigate();
 
@@ -36,6 +47,7 @@ function SearchResultItem({ result, onAdd, onRemove, isAdding, isRemoving }) {
         <div className="search-result-meta">
           {result.year && <span>{result.year}</span>}
           {result.genre && <span> · {result.genre}</span>}
+          {result.country && <span> · {result.country}</span>}
           {result.rating && <span> · ★ {result.rating.toFixed(2)}</span>}
         </div>
       </div>
@@ -68,13 +80,13 @@ function SearchResultItem({ result, onAdd, onRemove, isAdding, isRemoving }) {
 function Search() {
   const [artist, setArtist] = useState('');
   const [album, setAlbum] = useState('');
+  const [country, setCountry] = useState('US');
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [isAdding, setIsAdding] = useState(null);
   const [isRemoving, setIsRemoving] = useState(null);
-  const [addedIds, setAddedIds] = useState(new Set());
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -85,7 +97,7 @@ function Search() {
     setHasSearched(true);
 
     try {
-      const data = await searchQuery(artist.trim(), album.trim());
+      const data = await searchQuery(artist.trim(), album.trim(), country);
       setResults(data.results || []);
     } catch (err) {
       setError(err.message);
@@ -108,7 +120,6 @@ function Search() {
         discogs_rating: result.rating,
         discogs_rating_count: result.rating_count,
       });
-      setAddedIds((prev) => new Set([...prev, result.id]));
       setResults((prev) =>
         prev.map((r) => (r.id === result.id ? { ...r, inCollection: true } : r))
       );
@@ -166,6 +177,20 @@ function Search() {
             autoComplete="off"
           />
         </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="country-input">Pays d'édition</label>
+          <select
+            id="country-input"
+            className="form-input"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            style={{ cursor: 'pointer' }}
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
         <button
           type="submit"
           className="btn btn-primary btn-full"
@@ -192,7 +217,7 @@ function Search() {
             <div className="empty-state">
               <div className="empty-icon" aria-hidden="true">🔍</div>
               <h3>Aucun résultat</h3>
-              <p>Essayez avec des termes différents.</p>
+              <p>Essayez avec un autre pays ou des termes différents.</p>
             </div>
           ) : (
             <>

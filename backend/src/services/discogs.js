@@ -61,47 +61,54 @@ async function searchByBarcode(barcode) {
 }
 
 /**
+ * Check if a title contains non-Latin characters (Japanese, Korean, Hebrew, etc.)
+ */
+function hasNonLatinChars(str) {
+  if (!str) return false;
+  return /[\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF\u3000-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/.test(str);
+}
+
+/**
  * Search Discogs by artist and album name.
- * Searches masters first (original releases), falls back to releases.
- * Filters to vinyl formats only.
+ * Searches masters first, falls back to releases filtered by country.
  * @param {string} artist
  * @param {string} album
- * @returns {Promise<Array>} Top 5 normalized release objects
+ * @param {string} country - e.g. 'US', 'UK', 'France' (empty = all)
+ * @returns {Promise<Array>} Top 8 normalized release objects
  */
-async function searchByArtistAlbum(artist, album) {
-  // Search masters first — original releases, no country duplicates
-  const masterResponse = await client.get('/database/search', {
-    params: {
-      artist,
-      release_title: album,
-      type: 'master',
-      format: 'Vinyl',
-      token: TOKEN,
-    },
-  });
-  const masters = masterResponse.data.results || [];
+async function searchByArtistAlbum(artist, album, country = '') {
+  const baseParams = {
+    artist,
+    release_title: album,
+    format: 'Vinyl',
+    token: TOKEN,
+  };
 
-  if (masters.length >= 3) {
-    return masters.slice(0, 8).map(normalizeRelease);
+  if (country) {
+    baseParams.country = country;
   }
 
-  // Fall back to vinyl releases if not enough masters
+  // Search releases with country filter (masters don't have country)
   const releaseResponse = await client.get('/database/search', {
-    params: {
-      artist,
-      release_title: album,
-      type: 'release',
-      format: 'Vinyl',
-      token: TOKEN,
-    },
+    params: { ...baseParams, type: 'release' },
   });
-  const releases = releaseResponse.data.results || [];
+  const releases = (releaseResponse.data.results || [])
+    .filter((r) => !hasNonLatinChars(r.title));
 
-  // Merge masters + releases, deduplicate by normalized title+year, limit to 8
+  // If no country filter, also search masters
+  let masters = [];
+  if (!country) {
+    const masterResponse = await client.get('/database/search', {
+      params: { ...baseParams, type: 'master' },
+    });
+    masters = (masterResponse.data.results || [])
+      .filter((r) => !hasNonLatinChars(r.title));
+  }
+
+  // Merge, deduplicate by normalized title+year, limit to 8
   const combined = [...masters, ...releases];
   const seen = new Set();
   const deduped = combined.filter((r) => {
-    // Normalize: remove "Artist - " prefix, lowercase, trim
     const normalizedTitle = (r.title || '')
       .replace(/^[^-]+ - /i, '')
       .toLowerCase()
@@ -112,7 +119,10 @@ async function searchByArtistAlbum(artist, album) {
     return true;
   });
 
-  return deduped.slice(0, 8).map(normalizeRelease);
+  return deduped.slice(0, 8).map((item) => ({
+    ...normalizeRelease(item),
+    country: item.country || null,
+  }));
 }
 
 /**

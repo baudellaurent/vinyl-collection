@@ -35,9 +35,9 @@ export async function searchBarcode(barcode) {
 }
 
 /** Search Discogs by artist and/or album name. */
-export async function searchQuery(artist = '', album = '') {
+export async function searchQuery(artist = '', album = '', country = '') {
   const { data } = await api.get('/search/query', {
-    params: { artist, album },
+    params: { artist, album, country },
   });
   return data;
 }
