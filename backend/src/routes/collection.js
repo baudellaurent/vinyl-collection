@@ -107,6 +107,23 @@ router.post('/', async (req, res, next) => {
 });
 
 /**
+ * DELETE /api/collection/discogs/:discogsId
+ * Remove a vinyl from the collection by Discogs ID.
+ */
+router.delete('/discogs/:discogsId', async (req, res, next) => {
+  try {
+    const { discogsId } = req.params;
+    const result = await query('DELETE FROM vinyls WHERE discogs_id = $1 RETURNING id', [discogsId]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Vinyl not found' });
+    }
+    res.json({ deleted: true, discogs_id: discogsId });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * DELETE /api/collection/:id
  * Remove a vinyl from the collection.
  */

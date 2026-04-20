@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchQuery, addToCollection, removeFromCollection } from '../services/api';
+import { searchQuery, addToCollection, removeFromCollectionByDiscogsId } from '../services/api';
 
 function SearchResultItem({ result, onAdd, onRemove, isAdding, isRemoving }) {
   const navigate = useNavigate();
@@ -123,15 +123,10 @@ function Search() {
     setIsRemoving(result.id);
     setError(null);
     try {
-      const { getCollection, removeFromCollection: removeFn } = await import('../services/api');
-      const data = await getCollection(result.artist);
-      const entry = data?.vinyls?.find(v => v.discogs_id === result.id);
-      if (entry) {
-        await removeFn(entry.id);
-        setResults((prev) =>
-          prev.map((r) => (r.id === result.id ? { ...r, inCollection: false } : r))
-        );
-      }
+      await removeFromCollectionByDiscogsId(result.id);
+      setResults((prev) =>
+        prev.map((r) => (r.id === result.id ? { ...r, inCollection: false } : r))
+      );
     } catch (err) {
       setError(err.message);
     } finally {

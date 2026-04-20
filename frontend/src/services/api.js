@@ -48,6 +48,12 @@ export async function addToCollection(albumData) {
   return data;
 }
 
+/** Remove a vinyl from the collection by Discogs ID. */
+export async function removeFromCollectionByDiscogsId(discogsId) {
+  const { data } = await api.delete(`/collection/discogs/${encodeURIComponent(discogsId)}`);
+  return data;
+}
+
 /** Remove a vinyl from the collection by ID. */
 export async function removeFromCollection(id) {
   const { data } = await api.delete(`/collection/${id}`);
