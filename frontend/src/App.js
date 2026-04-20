@@ -62,8 +62,8 @@ function App() {
             <Route path="/album/:id" element={<AlbumDetail />} />
             <Route path="/discography/:artist" element={<Discography />} />
           </Routes>
-          <Footer />
           <BottomNav />
+          <Footer />
         </div>
       </BrowserRouter>
     </SettingsProvider>
