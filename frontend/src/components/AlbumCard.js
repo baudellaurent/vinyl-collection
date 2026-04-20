@@ -19,8 +19,10 @@ function AlbumCard({ album, onClick }) {
   const handleClick = () => {
     if (onClick) {
       onClick(album);
-    } else if (album.id) {
-      navigate(`/album/${album.id}`, { state: { album } });
+    } else {
+      // Use discogs_id if available, otherwise fall back to id
+      const navId = album.discogs_id || album.id;
+      navigate(`/album/${navId}`, { state: { album } });
     }
   };
 
