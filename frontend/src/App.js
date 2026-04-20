@@ -9,6 +9,7 @@ import Settings from './pages/Settings';
 import AlbumDetail from './pages/AlbumDetail';
 import Discography from './pages/Discography';
 import Login from './pages/Login';
+import Help from './pages/Help';
 import { VERSION, BUILD_DATE } from './components/Footer';
 
 function BottomNav() {
@@ -69,6 +70,7 @@ function AppContent() {
           <Route path="/scanner" element={<Scanner />} />
           <Route path="/search" element={<Search />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/help" element={<Help />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
           <Route path="/discography/:artist" element={<Discography />} />
         </Routes>

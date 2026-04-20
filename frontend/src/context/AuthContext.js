@@ -26,6 +26,10 @@ export function AuthProvider({ children }) {
     const authData = { token, mode, expiresAt };
     localStorage.setItem(AUTH_KEY, JSON.stringify(authData));
     setAuth(authData);
+    // Always redirect to collection on login
+    window.location.href = window.location.pathname.includes('/vinyl-collection')
+      ? '/vinyl-collection/'
+      : '/';
   };
 
   const logout = () => {

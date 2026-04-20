@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -43,6 +44,7 @@ function SettingRow({ label, description, children }) {
 function Settings() {
   const { settings, updateSetting } = useSettings();
   const { auth, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <main className="page">
@@ -152,10 +154,18 @@ function Settings() {
       </div>
 
       <button
+        className="btn btn-secondary btn-full"
+        onClick={() => navigate('/help')}
+        style={{ marginTop: 12 }}
+      >
+        ❓ Guide d'utilisation
+      </button>
+
+      <button
         className="btn btn-full"
         onClick={logout}
         style={{
-          marginTop: 16,
+          marginTop: 8,
           background: 'transparent',
           border: '1px solid var(--border)',
           color: 'var(--text-muted)',
