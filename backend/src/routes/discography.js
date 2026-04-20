@@ -37,7 +37,10 @@ router.get('/:artistName', async (req, res, next) => {
     let collectionDiscogsIds = new Set();
     let collectionMasterIds = new Set();
 
-    if (req.authMode !== 'test') {
+    if (req.authMode === 'test') {
+      collectionDiscogsIds = require('../services/testStore').getDiscogsIds(req.authToken);
+      collectionMasterIds = require('../services/testStore').getMasterIds(req.authToken);
+    } else {
       const userCollection = await query(
         'SELECT discogs_id, master_id FROM vinyls WHERE discogs_id IS NOT NULL OR master_id IS NOT NULL'
       );

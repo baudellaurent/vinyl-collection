@@ -97,7 +97,9 @@ router.get('/query', async (req, res, next) => {
     const discogsIds = results.map((r) => r.id).filter(Boolean);
     let inCollectionIds = new Set();
 
-    if (req.authMode !== 'test' && discogsIds.length > 0) {
+    if (req.authMode === 'test') {
+      inCollectionIds = require('../services/testStore').getDiscogsIds(req.authToken);
+    } else if (discogsIds.length > 0) {
       const placeholders = discogsIds.map((_, i) => '$' + (i + 1)).join(', ');
       const dbResult = await query(
         'SELECT discogs_id FROM vinyls WHERE discogs_id IN (' + placeholders + ')',

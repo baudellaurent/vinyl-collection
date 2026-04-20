@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const axios = require('axios');
 const { query } = require('../db');
+const testStore = require('../services/testStore');
 
 router.use(auth);
 
@@ -34,13 +35,13 @@ async function fetchAndSaveMasterId(vinylId, discogsId) {
 
 /**
  * GET /api/collection
- * List all vinyls sorted by artist then year.
- * In test mode, returns empty collection.
+ * In test mode: returns in-memory session collection.
  */
 router.get('/', async (req, res, next) => {
-  // Test mode: return empty collection
   if (req.authMode === 'test') {
-    return res.json({ vinyls: [], total: 0, testMode: true });
+    const { search } = req.query;
+    const vinyls = testStore.getVinyls(req.authToken, search);
+    return res.json({ vinyls, total: vinyls.length, testMode: true });
   }
   try {
     const { search } = req.query;
@@ -70,13 +71,15 @@ router.get('/', async (req, res, next) => {
 
 /**
  * POST /api/collection
- * Add a vinyl to the collection.
- * Blocked in test mode.
+ * In test mode: stores in memory only.
  */
 router.post('/', async (req, res, next) => {
-  // Block writes in test mode
   if (req.authMode === 'test') {
-    return res.status(403).json({ error: 'Test mode: collection is read-only' });
+    const { barcode, discogs_id, master_id, title, artist, year, genre, cover_url, discogs_rating, discogs_rating_count } = req.body;
+    if (!title || !artist) return res.status(400).json({ error: 'title and artist are required' });
+    const result = testStore.addVinyl(req.authToken, { barcode, discogs_id, master_id, title, artist, year, genre, cover_url, discogs_rating, discogs_rating_count });
+    if (result.error) return res.status(result.code).json({ error: result.error });
+    return res.status(201).json({ vinyl: result.vinyl, testMode: true });
   }
   try {
     const {
@@ -158,12 +161,12 @@ router.post('/', async (req, res, next) => {
 
 /**
  * DELETE /api/collection/discogs/:discogsId
- * Remove a vinyl from the collection by Discogs ID.
- * Blocked in test mode.
+ * In test mode: removes from memory.
  */
 router.delete('/discogs/:discogsId', async (req, res, next) => {
   if (req.authMode === 'test') {
-    return res.status(403).json({ error: 'Test mode: collection is read-only' });
+    const removed = testStore.removeVinylByDiscogsId(req.authToken, req.params.discogsId);
+    return res.json({ deleted: removed, discogs_id: req.params.discogsId, testMode: true });
   }
   try {
     const { discogsId } = req.params;
@@ -179,12 +182,12 @@ router.delete('/discogs/:discogsId', async (req, res, next) => {
 
 /**
  * DELETE /api/collection/:id
- * Remove a vinyl from the collection.
- * Blocked in test mode.
+ * In test mode: removes from memory.
  */
 router.delete('/:id', async (req, res, next) => {
   if (req.authMode === 'test') {
-    return res.status(403).json({ error: 'Test mode: collection is read-only' });
+    const removed = testStore.removeVinyl(req.authToken, Number(req.params.id));
+    return res.json({ deleted: removed, id: Number(req.params.id), testMode: true });
   }
   try {
     const { id } = req.params;
