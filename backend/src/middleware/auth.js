@@ -1,24 +1,38 @@
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || process.env.API_KEY;
+const API_KEY = process.env.API_KEY;
+
 /**
- * Simple API key authentication middleware.
- * Checks the `x-api-key` request header against the API_KEY environment variable.
+ * Auth middleware — accepts either:
+ * 1. x-api-key header (legacy, for internal use)
+ * 2. Authorization: Bearer <jwt> header (frontend login)
+ *
+ * Attaches req.authMode = 'personal' | 'test' to the request.
  */
 function auth(req, res, next) {
-  const apiKey = req.headers['x-api-key'];
+  // 1. Check JWT Bearer token
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.authMode = decoded.mode; // 'personal' or 'test'
+      req.authUser = decoded.username;
+      return next();
+    } catch {
+      return res.status(401).json({ error: 'Invalid or expired token. Please log in again.' });
+    }
+  }
 
-  if (!process.env.API_KEY) {
-    console.warn('WARNING: API_KEY environment variable is not set. Auth is disabled.');
+  // 2. Check x-api-key (legacy)
+  const apiKey = req.headers['x-api-key'];
+  if (apiKey && apiKey === API_KEY) {
+    req.authMode = 'personal';
     return next();
   }
 
-  if (!apiKey) {
-    return res.status(401).json({ error: 'Missing x-api-key header' });
-  }
-
-  if (apiKey !== process.env.API_KEY) {
-    return res.status(401).json({ error: 'Invalid API key' });
-  }
-
-  next();
+  return res.status(401).json({ error: 'Authentication required' });
 }
 
 module.exports = auth;

@@ -7,6 +7,7 @@ const collectionRoutes = require('./routes/collection');
 const searchRoutes = require('./routes/search');
 const discographyRoutes = require('./routes/discography');
 const maintenanceRoutes = require('./routes/maintenance');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,7 +16,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
-  allowedHeaders: ['Content-Type', 'x-api-key'],
+  allowedHeaders: ['Content-Type', 'x-api-key', 'Authorization'],
 }));
 app.use(express.json());
 
@@ -42,6 +43,9 @@ const apiLimiter = rateLimit({
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Auth routes (no auth middleware)
+app.use('/api/auth', authRoutes);
 
 // Routes
 app.use('/api/collection', collectionRoutes);

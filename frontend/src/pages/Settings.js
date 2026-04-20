@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 
 const COUNTRIES = [
   { value: '', label: '🌍 Tous les pays' },
@@ -41,6 +42,7 @@ function SettingRow({ label, description, children }) {
 
 function Settings() {
   const { settings, updateSetting } = useSettings();
+  const { auth, logout } = useAuth();
 
   return (
     <main className="page">
@@ -148,6 +150,19 @@ function Settings() {
       }}>
         Les paramètres sont sauvegardés automatiquement sur cet appareil.
       </div>
+
+      <button
+        className="btn btn-full"
+        onClick={logout}
+        style={{
+          marginTop: 16,
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          color: 'var(--text-muted)',
+        }}
+      >
+        🔓 Se déconnecter {auth?.mode === 'test' ? '(mode test)' : ''}
+      </button>
     </main>
   );
 }

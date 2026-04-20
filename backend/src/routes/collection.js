@@ -67,9 +67,13 @@ router.get('/', async (req, res, next) => {
 /**
  * POST /api/collection
  * Add a vinyl to the collection.
- * Body: { barcode?, discogs_id?, musicbrainz_id?, title, artist, year?, genre?, cover_url?, notes? }
+ * Blocked in test mode.
  */
 router.post('/', async (req, res, next) => {
+  // Block writes in test mode
+  if (req.authMode === 'test') {
+    return res.status(403).json({ error: 'Test mode: collection is read-only' });
+  }
   try {
     const {
       barcode,
@@ -151,8 +155,12 @@ router.post('/', async (req, res, next) => {
 /**
  * DELETE /api/collection/discogs/:discogsId
  * Remove a vinyl from the collection by Discogs ID.
+ * Blocked in test mode.
  */
 router.delete('/discogs/:discogsId', async (req, res, next) => {
+  if (req.authMode === 'test') {
+    return res.status(403).json({ error: 'Test mode: collection is read-only' });
+  }
   try {
     const { discogsId } = req.params;
     const result = await query('DELETE FROM vinyls WHERE discogs_id = $1 RETURNING id', [discogsId]);
@@ -168,8 +176,12 @@ router.delete('/discogs/:discogsId', async (req, res, next) => {
 /**
  * DELETE /api/collection/:id
  * Remove a vinyl from the collection.
+ * Blocked in test mode.
  */
 router.delete('/:id', async (req, res, next) => {
+  if (req.authMode === 'test') {
+    return res.status(403).json({ error: 'Test mode: collection is read-only' });
+  }
   try {
     const { id } = req.params;
 

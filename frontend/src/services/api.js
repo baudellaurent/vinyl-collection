@@ -4,9 +4,22 @@ const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': process.env.REACT_APP_API_KEY || '',
   },
   timeout: 15000,
+});
+
+// Inject auth token from localStorage on every request
+api.interceptors.request.use((config) => {
+  try {
+    const stored = localStorage.getItem('vinyl_auth');
+    if (stored) {
+      const { token } = JSON.parse(stored);
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+  } catch {}
+  return config;
 });
 
 // Response interceptor for consistent error handling

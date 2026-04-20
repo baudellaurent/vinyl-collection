@@ -1,12 +1,14 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { SettingsProvider } from './context/SettingsContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import Scanner from './pages/Scanner';
 import Search from './pages/Search';
 import Settings from './pages/Settings';
 import AlbumDetail from './pages/AlbumDetail';
 import Discography from './pages/Discography';
+import Login from './pages/Login';
 import { VERSION, BUILD_DATE } from './components/Footer';
 
 function BottomNav() {
@@ -37,23 +39,52 @@ function BottomNav() {
   );
 }
 
+function AppContent() {
+  const { isAuthenticated, auth } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  return (
+    <BrowserRouter basename="/vinyl-collection">
+      <div className="app">
+        {auth?.mode === 'test' && (
+          <div style={{
+            background: '#ff9800',
+            color: '#000',
+            textAlign: 'center',
+            padding: '4px',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            position: 'sticky',
+            top: 0,
+            zIndex: 200,
+          }}>
+            🧪 MODE TEST — Les données ne sont pas sauvegardées
+          </div>
+        )}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/scanner" element={<Scanner />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/album/:id" element={<AlbumDetail />} />
+          <Route path="/discography/:artist" element={<Discography />} />
+        </Routes>
+        <BottomNav />
+      </div>
+    </BrowserRouter>
+  );
+}
+
 function App() {
   return (
-    <SettingsProvider>
-      <BrowserRouter basename="/vinyl-collection">
-        <div className="app">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/scanner" element={<Scanner />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/album/:id" element={<AlbumDetail />} />
-            <Route path="/discography/:artist" element={<Discography />} />
-          </Routes>
-          <BottomNav />
-        </div>
-      </BrowserRouter>
-    </SettingsProvider>
+    <AuthProvider>
+      <SettingsProvider>
+        <AppContent />
+      </SettingsProvider>
+    </AuthProvider>
   );
 }
 
