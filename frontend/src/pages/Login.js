@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { VERSION, BUILD_DATE } from '../components/Footer';
 
 function Login() {
   const { login } = useAuth();
@@ -144,6 +145,16 @@ function Login() {
         }}>
           La session personnelle est valide 24h.<br/>
           Le mode test est valide 2h et ne sauvegarde rien.
+        </p>
+
+        <p style={{
+          textAlign: 'center',
+          fontSize: '0.58rem',
+          color: 'var(--text-muted)',
+          marginTop: 16,
+          letterSpacing: '0.3px',
+        }}>
+          CLHV-Solutions · All rights reserved · {BUILD_DATE} · v{VERSION}
         </p>
       </div>
     </div>
