@@ -62,21 +62,51 @@ async function searchByBarcode(barcode) {
 
 /**
  * Search Discogs by artist and album name.
+ * Searches masters first (original releases), falls back to releases.
  * @param {string} artist
  * @param {string} album
  * @returns {Promise<Array>} Top 5 normalized release objects
  */
 async function searchByArtistAlbum(artist, album) {
-  const response = await client.get('/database/search', {
+  // Search masters first — these are original releases, no duplicates per country
+  const masterResponse = await client.get('/database/search', {
+    params: {
+      artist,
+      release_title: album,
+      type: 'master',
+      token: TOKEN,
+    },
+  });
+  const masters = masterResponse.data.results || [];
+
+  if (masters.length >= 3) {
+    return masters.slice(0, 5).map(normalizeRelease);
+  }
+
+  // Fall back to releases if not enough masters found
+  const releaseResponse = await client.get('/database/search', {
     params: {
       artist,
       release_title: album,
       type: 'release',
+      // Prefer original/US/UK releases
+      country: '',
       token: TOKEN,
     },
   });
-  const results = response.data.results || [];
-  return results.slice(0, 5).map(normalizeRelease);
+  const releases = releaseResponse.data.results || [];
+
+  // Merge masters + releases, deduplicate by title+artist, limit to 5
+  const combined = [...masters, ...releases];
+  const seen = new Set();
+  const deduped = combined.filter((r) => {
+    const key = `${r.title}|${r.year}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return deduped.slice(0, 5).map(normalizeRelease);
 }
 
 /**
