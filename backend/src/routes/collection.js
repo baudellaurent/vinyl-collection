@@ -35,9 +35,13 @@ async function fetchAndSaveMasterId(vinylId, discogsId) {
 /**
  * GET /api/collection
  * List all vinyls sorted by artist then year.
- * Supports ?search= for filtering by title or artist.
+ * In test mode, returns empty collection.
  */
 router.get('/', async (req, res, next) => {
+  // Test mode: return empty collection
+  if (req.authMode === 'test') {
+    return res.json({ vinyls: [], total: 0, testMode: true });
+  }
   try {
     const { search } = req.query;
 
