@@ -15,7 +15,7 @@ const COUNTRIES = [
 const SORT_OPTIONS = [
   { value: 'relevance', label: '🔤 Pertinence', description: 'Ordre retourné par Discogs' },
   { value: 'date', label: '📅 Date', description: 'Plus ancien en premier (originaux)' },
-  { value: 'weighted', label: '⭐ Note pondérée', description: 'Meilleure note × nombre de votes' },
+  { value: 'weighted', label: '❤️ Popularité', description: 'Classé par nombre de personnes qui veulent l\'album' },
 ];
 
 function SettingRow({ label, description, children }) {

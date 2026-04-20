@@ -68,6 +68,11 @@ function DiscographyRank({ releases, isLoading }) {
               <div className="discography-year">{release.year}</div>
             )}
             <RatingDisplay rating={release.rating} count={release.rating_count} />
+            {release.want && (
+              <div className="discography-rating" style={{ color: 'var(--text-muted)' }}>
+                ❤️ {release.want.toLocaleString()} popularité
+              </div>
+            )}
           </div>
 
           {release.inCollection && (

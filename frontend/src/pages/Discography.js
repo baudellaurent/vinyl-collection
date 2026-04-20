@@ -34,7 +34,7 @@ function Discography() {
   }, [artistName, settings.sortOrder]);
 
   const sortLabel = settings.sortOrder === 'date' ? 'par date' :
-                    settings.sortOrder === 'relevance' ? 'par pertinence' : 'par note pondérée';
+                    settings.sortOrder === 'relevance' ? 'par pertinence' : 'par popularité';
 
   return (
     <main className="page">

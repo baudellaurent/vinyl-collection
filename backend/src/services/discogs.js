@@ -140,34 +140,58 @@ async function getRelease(releaseId) {
 }
 
 /**
- * Get all releases for a Discogs artist ID, sorted by year ascending.
- * @param {string|number} artistId
- * @returns {Promise<Array>} Normalized release objects
+ * Get all master releases for an artist, using search API with sort options.
+ * @param {string} artistName
+ * @param {number} page
+ * @param {string} sortOrder - 'weighted'|'date'|'relevance'
+ * @returns {Promise<{releases: Array, total: number, hasMore: boolean}>}
  */
-async function getArtistReleases(artistId) {
-  const response = await client.get(`/artists/${artistId}/releases`, {
-    params: {
-      sort: 'year',
-      sort_order: 'asc',
-      per_page: 100,
-      token: TOKEN,
-    },
-  });
-  const releases = response.data.releases || [];
-  // Filter to main releases only (type: 'master' or 'release')
-  return releases
-    .filter((r) => r.role === 'Main')
-    .map((r) => ({
-      id: String(r.id || r.main_release || ''),
-      title: r.title || '',
-      artist: r.artist || '',
-      year: r.year || null,
-      cover_url: r.thumb || null,
-      rating: r.stats?.community?.rating?.average || null,
-      rating_count: r.stats?.community?.rating?.count || null,
-      type: r.type || 'release',
-      discogs_artist_id: String(artistId),
-    }));
+async function getArtistMasters(artistName, page = 1, sortOrder = 'weighted') {
+  const PAGE_SIZE = 8;
+
+  // Map sortOrder to Discogs sort param
+  let discogsSort = 'want'; // default: most wanted = popularity proxy
+  let discogsSortOrder = 'desc';
+  if (sortOrder === 'date') {
+    discogsSort = 'year';
+    discogsSortOrder = 'asc';
+  } else if (sortOrder === 'relevance') {
+    discogsSort = undefined;
+    discogsSortOrder = undefined;
+  }
+
+  const params = {
+    artist: artistName,
+    type: 'master',
+    per_page: PAGE_SIZE,
+    page,
+    token: TOKEN,
+  };
+  if (discogsSort) {
+    params.sort = discogsSort;
+    params.sort_order = discogsSortOrder;
+  }
+
+  const response = await client.get('/database/search', { params });
+  const data = response.data;
+  const results = (data.results || []).filter((r) => !hasNonLatinChars(r.title));
+  const total = data.pagination?.items || results.length;
+  const hasMore = page < (data.pagination?.pages || 1);
+
+  const releases = results.map((item) => ({
+    id: String(item.id || ''),
+    title: item.title || '',
+    artist: artistName,
+    year: item.year || null,
+    cover_url: item.cover_image || item.thumb || null,
+    rating: item.community?.rating?.average || null,
+    rating_count: item.community?.rating?.count || null,
+    want: item.community?.want || null,
+    have: item.community?.have || null,
+    genre: Array.isArray(item.genre) ? item.genre[0] : null,
+  }));
+
+  return { releases, total, hasMore };
 }
 
 /**
@@ -195,5 +219,5 @@ module.exports = {
   searchByArtistAlbum,
   searchArtistId,
   getRelease,
-  getArtistReleases,
+  getArtistMasters,
 };
