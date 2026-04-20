@@ -153,9 +153,7 @@ function Search() {
     <main className="page">
       <header className="page-header">
         <h1 className="page-title">🔍 Recherche</h1>
-        <p className="page-subtitle">
-          Artiste seul → discographie complète · Artiste + Album → recherche Discogs
-        </p>
+        <p className="page-subtitle">Recherchez un album par artiste et/ou titre</p>
       </header>
 
       <form onSubmit={handleSearch} noValidate>
