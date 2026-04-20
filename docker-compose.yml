@@ -35,6 +35,8 @@ services:
       args:
         REACT_APP_API_URL: ${REACT_APP_API_URL:-/vinyl-collection/api}
         REACT_APP_API_KEY: ${API_KEY}
+        REACT_APP_VERSION: ${APP_VERSION:-1.2.0}
+        REACT_APP_BUILD_DATE: ${BUILD_DATE:-April 2026}
     ports:
       - "3000:3000"
     restart: unless-stopped

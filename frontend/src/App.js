@@ -7,6 +7,7 @@ import Search from './pages/Search';
 import Settings from './pages/Settings';
 import AlbumDetail from './pages/AlbumDetail';
 import Discography from './pages/Discography';
+import Footer from './components/Footer';
 
 function BottomNav() {
   return (
@@ -61,6 +62,7 @@ function App() {
             <Route path="/album/:id" element={<AlbumDetail />} />
             <Route path="/discography/:artist" element={<Discography />} />
           </Routes>
+          <Footer />
           <BottomNav />
         </div>
       </BrowserRouter>
