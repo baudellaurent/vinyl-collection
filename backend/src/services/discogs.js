@@ -170,9 +170,30 @@ async function getArtistReleases(artistId) {
     }));
 }
 
+/**
+ * Search for an artist by name and return their Discogs artist ID.
+ * @param {string} artistName
+ * @returns {Promise<string|null>} Discogs artist ID
+ */
+async function searchArtistId(artistName) {
+  const response = await client.get('/database/search', {
+    params: {
+      q: artistName,
+      type: 'artist',
+      per_page: 5,
+      token: TOKEN,
+    },
+  });
+  const results = response.data.results || [];
+  if (results.length === 0) return null;
+  // Return the first result's ID
+  return String(results[0].id);
+}
+
 module.exports = {
   searchByBarcode,
   searchByArtistAlbum,
+  searchArtistId,
   getRelease,
   getArtistReleases,
 };

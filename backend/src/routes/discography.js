@@ -29,13 +29,7 @@ router.get('/:artistName', async (req, res, next) => {
     }
 
     // Step 1: Search for the artist on Discogs to get their ID
-    const searchResults = await discogs.searchByArtistAlbum(artistName, '');
-    if (searchResults.length === 0) {
-      return res.json({ artist: artistName, releases: [] });
-    }
-
-    // Find the most relevant artist ID from results
-    const artistId = searchResults.find((r) => r.discogs_artist_id)?.discogs_artist_id;
+    const artistId = await discogs.searchArtistId(artistName);
     if (!artistId) {
       return res.json({ artist: artistName, releases: [] });
     }
