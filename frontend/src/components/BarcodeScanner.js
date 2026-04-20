@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 function BarcodeScanner({ onScan, onError }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
+  const streamRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [permissionDenied, setPermissionDenied] = useState(false);
 
@@ -11,39 +12,42 @@ function BarcodeScanner({ onScan, onError }) {
 
     async function startScanner() {
       try {
-        // Dynamically import to avoid SSR issues
         const { BrowserMultiFormatReader } = await import('@zxing/library');
         if (!active) return;
+
+        // Request camera stream directly — prefer back camera on mobile
+        const constraints = {
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (!active) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+
+        setIsLoading(false);
 
         const reader = new BrowserMultiFormatReader();
         readerRef.current = reader;
 
-        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        if (!active) return;
-
-        if (devices.length === 0) {
-          onError?.('Aucune caméra détectée sur cet appareil.');
-          setIsLoading(false);
-          return;
-        }
-
-        // Prefer back camera on mobile
-        const backCamera = devices.find(
-          (d) =>
-            d.label.toLowerCase().includes('back') ||
-            d.label.toLowerCase().includes('rear') ||
-            d.label.toLowerCase().includes('environment')
-        );
-        const deviceId = backCamera ? backCamera.deviceId : devices[0].deviceId;
-
-        setIsLoading(false);
-
-        await reader.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
+        // Decode from the video element directly
+        reader.decodeFromVideoElement(videoRef.current, (result, err) => {
           if (!active) return;
           if (result) {
             onScan?.(result.getText());
           }
-          // Ignore continuous "not found" errors — they're expected between frames
         });
       } catch (err) {
         if (!active) return;
@@ -51,10 +55,12 @@ function BarcodeScanner({ onScan, onError }) {
 
         if (
           err.name === 'NotAllowedError' ||
-          err.message?.includes('Permission')
+          err.name === 'PermissionDeniedError'
         ) {
           setPermissionDenied(true);
-          onError?.('Accès à la caméra refusé. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.');
+          onError?.("Accès à la caméra refusé. Veuillez autoriser l'accès dans les paramètres de votre navigateur.");
+        } else if (err.name === 'NotFoundError') {
+          onError?.('Aucune caméra détectée sur cet appareil.');
         } else {
           onError?.(`Erreur caméra: ${err.message}`);
         }
@@ -66,9 +72,10 @@ function BarcodeScanner({ onScan, onError }) {
     return () => {
       active = false;
       if (readerRef.current) {
-        try {
-          readerRef.current.reset();
-        } catch (_) {}
+        try { readerRef.current.reset(); } catch (_) {}
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
       }
     };
   }, [onScan, onError]);
