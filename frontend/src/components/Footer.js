@@ -8,15 +8,15 @@ function Footer() {
   return (
     <footer style={{
       position: 'fixed',
-      bottom: 'var(--nav-height)',
+      bottom: 0,
       left: 0,
       right: 0,
       textAlign: 'center',
-      padding: '4px 16px',
-      fontSize: '0.65rem',
+      padding: '3px 16px',
+      paddingBottom: 'env(safe-area-inset-bottom)',
+      fontSize: '0.6rem',
       color: 'var(--text-muted)',
-      background: 'var(--bg-primary)',
-      borderTop: '1px solid var(--border)',
+      background: 'var(--bg-secondary)',
       zIndex: 99,
     }}>
       CLHV-Solutions · All rights reserved · {BUILD_DATE} · v{VERSION}

@@ -14,6 +14,7 @@
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   --radius: 12px;
   --nav-height: 64px;
+  --footer-height: 18px;
   --transition: 0.2s ease;
 }
 
@@ -62,7 +63,7 @@ img {
 .page {
   flex: 1;
   padding: 16px;
-  padding-bottom: calc(var(--nav-height) + 36px);
+  padding-bottom: calc(var(--nav-height) + var(--footer-height) + 16px);
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
@@ -87,7 +88,7 @@ img {
 /* ===== Bottom Navigation ===== */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
+  bottom: var(--footer-height);
   left: 0;
   right: 0;
   height: var(--nav-height);
@@ -97,7 +98,6 @@ img {
   align-items: center;
   justify-content: space-around;
   z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav-item {
