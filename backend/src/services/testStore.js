@@ -17,7 +17,24 @@ function getSession(token) {
 
 function initSession(token, expiresAt) {
   if (!sessions.has(token)) {
-    sessions.set(token, { vinyls: [], nextId: 1, expiresAt });
+    // Pre-populate with Metallica - The Black Album as demo
+    sessions.set(token, {
+      nextId: 2,
+      expiresAt,
+      vinyls: [{
+        id: 1,
+        discogs_id: '6651',
+        master_id: '6651',
+        title: 'Metallica - Metallica',
+        artist: 'Metallica',
+        year: 1991,
+        genre: 'Rock',
+        cover_url: 'https://i.discogs.com/0QSPrbxUSY2NPjUj47VQ4zyAbK8S8SiAnxDnil5LPoc/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTM4MTk4/OC0xNjIxMDEyMzY3/LTY2OTguanBlZw.jpeg',
+        discogs_rating: null,
+        discogs_rating_count: null,
+        added_at: new Date().toISOString(),
+      }]
+    });
   }
 }
 
