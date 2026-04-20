@@ -22,29 +22,22 @@ services:
       DISCOGS_TOKEN: ${DISCOGS_TOKEN}
       API_KEY: ${API_KEY}
       PORT: 3001
+    ports:
+      - "3001:3001"
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:alpine
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-/vinyl-collection/api}
+        REACT_APP_API_KEY: ${API_KEY}
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - certbot_www:/var/www/certbot
-    depends_on:
-      - backend
-      - frontend
+      - "3000:3000"
     restart: unless-stopped
 
 volumes:
   postgres_data:
-  certbot_www:

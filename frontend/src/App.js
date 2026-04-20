@@ -40,7 +40,7 @@ function BottomNav() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/vinyl-collection">
       <div className="app">
         <Routes>
           <Route path="/" element={<Home />} />

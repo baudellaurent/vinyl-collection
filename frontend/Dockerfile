@@ -8,6 +8,15 @@ RUN npm ci
 COPY public/ ./public/
 COPY src/ ./src/
 
+# Build args for runtime config
+ARG REACT_APP_API_URL
+ARG REACT_APP_API_KEY
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_API_KEY=$REACT_APP_API_KEY
+
+# Copy .env.local if present (overrides build args)
+COPY .env.local* ./
+
 # Build the React app
 RUN npm run build
 

@@ -2,6 +2,7 @@
   "name": "vinyl-collection-frontend",
   "version": "1.0.0",
   "private": true,
+  "homepage": "/vinyl-collection",
   "description": "Vinyl Collection Manager PWA",
   "dependencies": {
     "@zxing/library": "^0.20.0",
