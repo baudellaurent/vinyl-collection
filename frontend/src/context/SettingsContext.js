@@ -5,6 +5,7 @@ const STORAGE_KEY = 'vinyl_settings';
 const defaults = {
   country: 'US',
   sortOrder: 'relevance', // 'relevance' | 'date' | 'weighted'
+  viewMode: 'grid', // 'grid' | 'list'
 };
 
 const SettingsContext = createContext(null);

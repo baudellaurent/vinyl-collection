@@ -50,6 +50,36 @@ function Settings() {
       </header>
 
       <SettingRow
+        label="Affichage de la collection"
+        description="Grande vignette ou liste compacte"
+      >
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[
+            { value: 'grid', label: '⊞ Grandes vignettes' },
+            { value: 'list', label: '☰ Liste compacte' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => updateSetting('viewMode', opt.value)}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: 8,
+                border: settings.viewMode === opt.value ? '2px solid var(--accent)' : '1px solid var(--border)',
+                background: settings.viewMode === opt.value ? 'rgba(233, 69, 96, 0.15)' : 'var(--bg-secondary)',
+                color: settings.viewMode === opt.value ? 'var(--accent)' : 'var(--text-primary)',
+                fontWeight: settings.viewMode === opt.value ? 700 : 400,
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </SettingRow>
+
+      <SettingRow
         label="Pays d'édition par défaut"
         description="Filtre les résultats de recherche par pays de pressage"
       >

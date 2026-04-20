@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import CollectionGrid from '../components/CollectionGrid';
 import SearchBar from '../components/SearchBar';
 import { getCollection } from '../services/api';
+import { useSettings } from '../context/SettingsContext';
 
 function Home() {
+  const { settings } = useSettings();
   const [vinyls, setVinyls] = useState([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
@@ -61,6 +63,7 @@ function Home() {
       ) : (
         <CollectionGrid
           vinyls={vinyls}
+          viewMode={settings.viewMode || 'grid'}
           emptyMessage={
             search
               ? `Aucun résultat pour "${search}"`
