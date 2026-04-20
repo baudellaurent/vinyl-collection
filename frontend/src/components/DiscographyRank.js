@@ -118,6 +118,7 @@ function DiscographyRank({ releases: initialReleases, isLoading }) {
     try {
       await addToCollection({
         discogs_id: release.id,
+        master_id: release.id, // master search results use master IDs directly
         title: release.title,
         artist: release.artist,
         year: release.year,

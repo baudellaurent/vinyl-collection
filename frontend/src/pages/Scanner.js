@@ -47,6 +47,7 @@ function Scanner() {
       await addToCollection({
         barcode: scanResult.barcode,
         discogs_id: scanResult.album.id,
+        master_id: scanResult.album.master_id,
         title: scanResult.album.title,
         artist: scanResult.album.artist,
         year: scanResult.album.year,

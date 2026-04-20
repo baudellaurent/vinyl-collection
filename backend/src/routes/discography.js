@@ -32,11 +32,12 @@ router.get('/:artistName', async (req, res, next) => {
       return res.json({ artist: artistName, releases: [], total: 0, page: pageNum, hasMore: false });
     }
 
-    // Cross-reference with user's collection
+    // Cross-reference with user's collection by discogs_id OR master_id
     const userCollection = await query(
-      'SELECT discogs_id FROM vinyls WHERE discogs_id IS NOT NULL'
+      'SELECT discogs_id, master_id FROM vinyls WHERE discogs_id IS NOT NULL OR master_id IS NOT NULL'
     );
-    const collectionIds = new Set(userCollection.rows.map((r) => r.discogs_id));
+    const collectionDiscogsIds = new Set(userCollection.rows.map((r) => r.discogs_id).filter(Boolean));
+    const collectionMasterIds = new Set(userCollection.rows.map((r) => r.master_id).filter(Boolean));
 
     const ranked = releases.map((release, index) => ({
       rank: (pageNum - 1) * 8 + index + 1,
@@ -48,7 +49,7 @@ router.get('/:artistName', async (req, res, next) => {
       rating: release.rating,
       rating_count: release.rating_count,
       want: release.want,
-      inCollection: collectionIds.has(release.id),
+      inCollection: collectionDiscogsIds.has(release.id) || collectionMasterIds.has(release.id),
     }));
 
     res.json({

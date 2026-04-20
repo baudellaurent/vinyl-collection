@@ -47,6 +47,7 @@ router.post('/', async (req, res, next) => {
     const {
       barcode,
       discogs_id,
+      master_id,
       musicbrainz_id,
       title,
       artist,
@@ -75,15 +76,23 @@ router.post('/', async (req, res, next) => {
         return res.status(409).json({ error: 'Vinyl with this Discogs ID already in collection', id: existing.rows[0].id });
       }
     }
+    // Also check by master_id to prevent adding same album twice (release vs master)
+    if (master_id) {
+      const existing = await query('SELECT id FROM vinyls WHERE master_id = $1', [master_id]);
+      if (existing.rows.length > 0) {
+        return res.status(409).json({ error: 'Vinyl already in collection (same master)', id: existing.rows[0].id });
+      }
+    }
 
     const result = await query(
       `INSERT INTO vinyls
-        (barcode, discogs_id, musicbrainz_id, title, artist, year, genre, cover_url, discogs_rating, discogs_rating_count, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        (barcode, discogs_id, master_id, musicbrainz_id, title, artist, year, genre, cover_url, discogs_rating, discogs_rating_count, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         barcode || null,
         discogs_id || null,
+        master_id || null,
         musicbrainz_id || null,
         title,
         artist,

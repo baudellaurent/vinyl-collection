@@ -18,6 +18,7 @@ const client = axios.create({
 function normalizeRelease(item) {
   return {
     id: String(item.id || ''),
+    master_id: item.master_id ? String(item.master_id) : null,
     title: item.title || '',
     artist: Array.isArray(item.artists)
       ? item.artists.map((a) => a.name).join(', ')
