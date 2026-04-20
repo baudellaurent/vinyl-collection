@@ -7,44 +7,32 @@ import Search from './pages/Search';
 import Settings from './pages/Settings';
 import AlbumDetail from './pages/AlbumDetail';
 import Discography from './pages/Discography';
-import Footer from './components/Footer';
+import { VERSION, BUILD_DATE } from './components/Footer';
 
 function BottomNav() {
   return (
     <nav className="bottom-nav" aria-label="Main navigation">
-      <NavLink
-        to="/"
-        end
-        className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-        aria-label="Collection"
-      >
-        <span className="nav-icon">🎵</span>
-        <span>Collection</span>
-      </NavLink>
-      <NavLink
-        to="/scanner"
-        className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-        aria-label="Scanner"
-      >
-        <span className="nav-icon">📷</span>
-        <span>Scanner</span>
-      </NavLink>
-      <NavLink
-        to="/search"
-        className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-        aria-label="Recherche"
-      >
-        <span className="nav-icon">🔍</span>
-        <span>Recherche</span>
-      </NavLink>
-      <NavLink
-        to="/settings"
-        className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-        aria-label="Paramètres"
-      >
-        <span className="nav-icon">⚙️</span>
-        <span>Réglages</span>
-      </NavLink>
+      <div className="nav-icons-row">
+        <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} aria-label="Collection">
+          <span className="nav-icon">🎵</span>
+          <span>Collection</span>
+        </NavLink>
+        <NavLink to="/scanner" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} aria-label="Scanner">
+          <span className="nav-icon">📷</span>
+          <span>Scanner</span>
+        </NavLink>
+        <NavLink to="/search" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} aria-label="Recherche">
+          <span className="nav-icon">🔍</span>
+          <span>Recherche</span>
+        </NavLink>
+        <NavLink to="/settings" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} aria-label="Paramètres">
+          <span className="nav-icon">⚙️</span>
+          <span>Réglages</span>
+        </NavLink>
+      </div>
+      <div className="nav-copyright">
+        CLHV-Solutions · All rights reserved · {BUILD_DATE} · v{VERSION}
+      </div>
     </nav>
   );
 }
@@ -63,7 +51,6 @@ function App() {
             <Route path="/discography/:artist" element={<Discography />} />
           </Routes>
           <BottomNav />
-          <Footer />
         </div>
       </BrowserRouter>
     </SettingsProvider>
