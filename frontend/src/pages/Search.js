@@ -87,23 +87,29 @@ function Search() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isAdding, setIsAdding] = useState(null);
   const [isRemoving, setIsRemoving] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!artist.trim() && !album.trim()) return;
-
+  const doSearch = async (pageNum) => {
     setIsLoading(true);
     setError(null);
     setHasSearched(true);
-
     try {
-      const data = await searchQuery(artist.trim(), album.trim(), country);
+      const data = await searchQuery(artist.trim(), album.trim(), country, pageNum);
       setResults(data.results || []);
+      setHasMore(data.hasMore || false);
+      setPage(pageNum);
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!artist.trim() && !album.trim()) return;
+    doSearch(1);
   };
 
   const handleAdd = async (result) => {
@@ -222,7 +228,7 @@ function Search() {
           ) : (
             <>
               <p className="text-muted mb-16" style={{ fontSize: '0.85rem' }}>
-                {results.length} résultat{results.length > 1 ? 's' : ''} trouvé{results.length > 1 ? 's' : ''}
+                {results.length} résultat{results.length > 1 ? 's' : ''} trouvé{results.length > 1 ? 's' : ''} — page {page}
               </p>
               <div className="search-results">
                 {results.map((result) => (
@@ -235,6 +241,28 @@ function Search() {
                     isRemoving={isRemoving}
                   />
                 ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                {page > 1 && (
+                  <button
+                    className="btn btn-secondary"
+                    style={{ flex: 1 }}
+                    onClick={() => doSearch(page - 1)}
+                    disabled={isLoading}
+                  >
+                    ← Précédent
+                  </button>
+                )}
+                {hasMore && (
+                  <button
+                    className="btn btn-secondary"
+                    style={{ flex: 1 }}
+                    onClick={() => doSearch(page + 1)}
+                    disabled={isLoading}
+                  >
+                    Suivant →
+                  </button>
+                )}
               </div>
             </>
           )}

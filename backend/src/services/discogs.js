@@ -70,17 +70,19 @@ function hasNonLatinChars(str) {
 
 /**
  * Search Discogs by artist and album name.
- * Searches masters first, falls back to releases filtered by country.
  * @param {string} artist
  * @param {string} album
  * @param {string} country - e.g. 'US', 'UK', 'France' (empty = all)
- * @returns {Promise<Array>} Top 8 normalized release objects
+ * @param {number} page - page number (1-based)
+ * @returns {Promise<Array>} Up to 8 normalized release objects
  */
-async function searchByArtistAlbum(artist, album, country = '') {
+async function searchByArtistAlbum(artist, album, country = '', page = 1) {
   const baseParams = {
     artist,
     release_title: album,
     format: 'Vinyl',
+    per_page: 25,
+    page,
     token: TOKEN,
   };
 
@@ -88,16 +90,16 @@ async function searchByArtistAlbum(artist, album, country = '') {
     baseParams.country = country;
   }
 
-  // Search releases with country filter (masters don't have country)
+  // Search releases with country filter
   const releaseResponse = await client.get('/database/search', {
     params: { ...baseParams, type: 'release' },
   });
   const releases = (releaseResponse.data.results || [])
     .filter((r) => !hasNonLatinChars(r.title));
 
-  // If no country filter, also search masters
+  // If no country filter, also search masters (page 1 only)
   let masters = [];
-  if (!country) {
+  if (!country && page === 1) {
     const masterResponse = await client.get('/database/search', {
       params: { ...baseParams, type: 'master' },
     });

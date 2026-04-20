@@ -59,20 +59,23 @@ router.get('/barcode/:barcode', async (req, res, next) => {
 });
 
 /**
- * GET /api/search/query?artist=&album=&country=
+ * GET /api/search/query?artist=&album=&country=&page=
  */
 router.get('/query', async (req, res, next) => {
   try {
-    const { artist, album, country } = req.query;
+    const { artist, album, country, page } = req.query;
 
     if (!artist && !album) {
       return res.status(400).json({ error: 'Provide at least artist or album query parameter' });
     }
 
+    const pageNum = Math.max(1, parseInt(page) || 1);
+
     const results = await discogs.searchByArtistAlbum(
       artist || '',
       album || '',
-      country || ''
+      country || '',
+      pageNum
     );
 
     if (results.length === 0) {
@@ -96,7 +99,7 @@ router.get('/query', async (req, res, next) => {
       inCollection: inCollectionIds.has(r.id),
     }));
 
-    res.json({ results: enriched });
+    res.json({ results: enriched, page: pageNum, hasMore: results.length === 8 });
   } catch (err) {
     next(err);
   }
