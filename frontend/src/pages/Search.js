@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchQuery, addToCollection } from '../services/api';
+import { searchQuery, addToCollection, removeFromCollection } from '../services/api';
 
-function SearchResultItem({ result, onAdd, isAdding }) {
+function SearchResultItem({ result, onAdd, onRemove, isAdding, isRemoving }) {
   const navigate = useNavigate();
 
   return (
@@ -41,7 +41,15 @@ function SearchResultItem({ result, onAdd, isAdding }) {
       </div>
 
       {result.inCollection ? (
-        <span className="in-collection-badge" style={{ position: 'static', flexShrink: 0 }}>✓</span>
+        <button
+          className="btn btn-danger"
+          onClick={() => onRemove(result)}
+          disabled={isRemoving === result.id}
+          aria-label={`Supprimer ${result.title} de la collection`}
+          style={{ flexShrink: 0, padding: '8px 14px', fontSize: '0.8rem', background: '#c0392b' }}
+        >
+          {isRemoving === result.id ? '...' : '🗑 Supprimer'}
+        </button>
       ) : (
         <button
           className="btn btn-primary"
@@ -65,6 +73,7 @@ function Search() {
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [isAdding, setIsAdding] = useState(null);
+  const [isRemoving, setIsRemoving] = useState(null);
   const [addedIds, setAddedIds] = useState(new Set());
 
   const handleSearch = async (e) => {
@@ -107,6 +116,26 @@ function Search() {
       setError(err.message);
     } finally {
       setIsAdding(null);
+    }
+  };
+
+  const handleRemove = async (result) => {
+    setIsRemoving(result.id);
+    setError(null);
+    try {
+      const { getCollection, removeFromCollection: removeFn } = await import('../services/api');
+      const data = await getCollection(result.artist);
+      const entry = data?.vinyls?.find(v => v.discogs_id === result.id);
+      if (entry) {
+        await removeFn(entry.id);
+        setResults((prev) =>
+          prev.map((r) => (r.id === result.id ? { ...r, inCollection: false } : r))
+        );
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsRemoving(null);
     }
   };
 
@@ -181,7 +210,9 @@ function Search() {
                     key={result.id}
                     result={result}
                     onAdd={handleAdd}
+                    onRemove={handleRemove}
                     isAdding={isAdding}
+                    isRemoving={isRemoving}
                   />
                 ))}
               </div>
