@@ -18,7 +18,7 @@ router.get('/barcode/:barcode', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid barcode format' });
     }
 
-    // Check collection first (fast path)
+    // Check collection by barcode OR discogs_id
     const collectionCheck = await query(
       'SELECT * FROM vinyls WHERE barcode = $1 LIMIT 1',
       [barcode]
@@ -35,10 +35,25 @@ router.get('/barcode/:barcode', async (req, res, next) => {
       if (results.length > 0) {
         found = true;
         album = results[0];
+
+        // Also check by discogs_id if not found by barcode
+        if (!inCollection && album.id) {
+          const discogsCheck = await query(
+            'SELECT * FROM vinyls WHERE discogs_id = $1 LIMIT 1',
+            [album.id]
+          );
+          if (discogsCheck.rows.length > 0) {
+            return res.json({
+              found: true,
+              inCollection: true,
+              album,
+              collectionEntry: discogsCheck.rows[0],
+            });
+          }
+        }
       }
     } catch (apiErr) {
       console.error('Discogs barcode search error:', apiErr.message);
-      // Return collection result even if Discogs is down
     }
 
     res.json({
@@ -54,7 +69,7 @@ router.get('/barcode/:barcode', async (req, res, next) => {
 
 /**
  * GET /api/search/query?artist=&album=
- * Search Discogs by artist + album text, return top 5 with inCollection flags.
+ * Search Discogs by artist + album text, return results with inCollection flags.
  */
 router.get('/query', async (req, res, next) => {
   try {
@@ -73,14 +88,14 @@ router.get('/query', async (req, res, next) => {
       return res.json({ results: [] });
     }
 
-    // Batch check which results are already in collection
+    // Batch check which results are already in collection by discogs_id
     const discogsIds = results.map((r) => r.id).filter(Boolean);
     let inCollectionIds = new Set();
 
     if (discogsIds.length > 0) {
-      const placeholders = discogsIds.map((_, i) => `$${i + 1}`).join(', ');
+      const placeholders = discogsIds.map((_, i) => '$' + (i + 1)).join(', ');
       const dbResult = await query(
-        `SELECT discogs_id FROM vinyls WHERE discogs_id IN (${placeholders})`,
+        'SELECT discogs_id FROM vinyls WHERE discogs_id IN (' + placeholders + ')',
         discogsIds
       );
       inCollectionIds = new Set(dbResult.rows.map((r) => r.discogs_id));
