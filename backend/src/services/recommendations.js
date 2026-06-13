@@ -94,8 +94,14 @@ async function getRecommendations(vinyls) {
   const ownedDiscogsIds = new Set(vinyls.map((v) => v.discogs_id).filter(Boolean));
   const ownedArtists = new Set(vinyls.map((v) => v.artist).filter(Boolean));
 
+  // Normalise: lowercase, strip "Artist - " prefix Discogs sometimes adds, trim
+  const normalizeTitle = (t) => (t || '').replace(/^[^-]+ - /i, '').toLowerCase().trim();
+  const ownedTitles = new Set(vinyls.map((v) => normalizeTitle(v.title)).filter(Boolean));
+
   function isOwned(release) {
-    return ownedMasterIds.has(release.id) || ownedDiscogsIds.has(release.id);
+    return ownedMasterIds.has(release.id)
+      || ownedDiscogsIds.has(release.id)
+      || ownedTitles.has(normalizeTitle(release.title));
   }
 
   // Section 1: all collected artists, fewest albums first — 1 best suggestion per artist
