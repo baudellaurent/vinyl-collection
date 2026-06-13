@@ -114,10 +114,21 @@ async function getRecommendations(vinyls) {
       || ownedTitlesLoose.has(normalizeTitleLoose(release.title));
   }
 
+  // Normalize artist name: remove Discogs disambiguation suffixes like "(2)", "(3)"
+  const normalizeArtist = (name) => (name || '').replace(/\s*\(\d+\)\s*$/, '').toLowerCase().trim();
+
   // Section 1: all collected artists, fewest albums first — 1 best suggestion per artist
+  // Deduplicate by normalized name so "David Bowie" and "David Bowie (2)" count as one
+  const seenArtistNames = new Set();
   const section1Artists = [...profile.topArtists]
-    .sort((a, b) => a.count - b.count) // fewest owned first
-    .slice(0, 12);
+    .sort((a, b) => a.count - b.count)
+    .filter(({ name }) => {
+      const key = normalizeArtist(name);
+      if (seenArtistNames.has(key)) return false;
+      seenArtistNames.add(key);
+      return true;
+    })
+    .slice(0, 30);
 
   const byArtistPromises = section1Artists.map(async ({ name, count }) => {
     try {
@@ -154,7 +165,8 @@ async function getRecommendations(vinyls) {
   // Section 1 must resolve first so sections 2 & 3 can exclude already-suggested artists
   const byArtistNested = await Promise.all(byArtistPromises);
   const byArtist = byArtistNested.flat();
-  const suggestedArtists = new Set(byArtist.map((r) => r.artist).filter(Boolean));
+  // Use normalized names so "David Bowie (2)" is treated the same as "David Bowie"
+  const suggestedArtists = new Set(byArtist.map((r) => normalizeArtist(r.artist)).filter(Boolean));
 
   // Section 2: top genres + dominant decade, always sorted by want count
   // Excludes artists already shown in section 1
@@ -163,7 +175,7 @@ async function getRecommendations(vinyls) {
     try {
       const { releases } = await discogs.searchByGenreAndEra(genre, profile.topDecade, 'mainstream');
       return releases
-        .filter((r) => !isOwned(r) && r.cover_url && !suggestedArtists.has(r.artist))
+        .filter((r) => !isOwned(r) && r.cover_url && !suggestedArtists.has(normalizeArtist(r.artist)))
         .sort((a, b) => (Number(b.want) || 0) - (Number(a.want) || 0))
         .slice(0, 5)
         .map((r) => ({
@@ -190,7 +202,7 @@ async function getRecommendations(vinyls) {
       return releases
         .filter((r) => !isOwned(r) && r.cover_url && r.artist
           && !ownedArtists.has(r.artist)
-          && !suggestedArtists.has(r.artist))
+          && !suggestedArtists.has(normalizeArtist(r.artist)))
         .map((r) => ({
           ...r,
           _score: scoreForDiscovery(r, profile),
