@@ -94,14 +94,24 @@ async function getRecommendations(vinyls) {
   const ownedDiscogsIds = new Set(vinyls.map((v) => v.discogs_id).filter(Boolean));
   const ownedArtists = new Set(vinyls.map((v) => v.artist).filter(Boolean));
 
-  // Normalise: lowercase, strip "Artist - " prefix Discogs sometimes adds, trim
+  // Strict: strip "Artist - " prefix only
   const normalizeTitle = (t) => (t || '').replace(/^[^-]+ - /i, '').toLowerCase().trim();
+
+  // Loose: also strip parenthetical qualifiers like "(1977 Press)", "[Remastered]", "- Deluxe Edition"
+  const normalizeTitleLoose = (t) =>
+    normalizeTitle(t)
+      .replace(/\s*[\(\[].*?[\)\]]/g, '')  // strip (...) and [...]
+      .replace(/\s*[-–]\s*(deluxe|remaster|expanded|anniversary|edition|live|bonus|mono|stereo).*/i, '')
+      .trim();
+
   const ownedTitles = new Set(vinyls.map((v) => normalizeTitle(v.title)).filter(Boolean));
+  const ownedTitlesLoose = new Set(vinyls.map((v) => normalizeTitleLoose(v.title)).filter(Boolean));
 
   function isOwned(release) {
     return ownedMasterIds.has(release.id)
       || ownedDiscogsIds.has(release.id)
-      || ownedTitles.has(normalizeTitle(release.title));
+      || ownedTitles.has(normalizeTitle(release.title))
+      || ownedTitlesLoose.has(normalizeTitleLoose(release.title));
   }
 
   // Section 1: all collected artists, fewest albums first — 1 best suggestion per artist
