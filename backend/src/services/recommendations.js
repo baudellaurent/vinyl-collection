@@ -94,28 +94,34 @@ async function getRecommendations(vinyls) {
   const ownedDiscogsIds = new Set(vinyls.map((v) => v.discogs_id).filter(Boolean));
   const ownedArtists = new Set(vinyls.map((v) => v.artist).filter(Boolean));
 
-  // Strict: strip "Artist - " prefix only
+  // Normalize artist: remove Discogs disambiguation suffixes "(2)", "(3)"
+  const normalizeArtist = (name) => (name || '').replace(/\s*\(\d+\)\s*$/, '').toLowerCase().trim();
+
+  // Strict title: strip "Artist - " prefix
   const normalizeTitle = (t) => (t || '').replace(/^[^-]+ - /i, '').toLowerCase().trim();
 
-  // Loose: also strip parenthetical qualifiers like "(1977 Press)", "[Remastered]", "- Deluxe Edition"
+  // Loose title: also strip parenthetical qualifiers like "(1977 Press)", "[Remastered]"
   const normalizeTitleLoose = (t) =>
     normalizeTitle(t)
-      .replace(/\s*[\(\[].*?[\)\]]/g, '')  // strip (...) and [...]
+      .replace(/\s*[\(\[].*?[\)\]]/g, '')
       .replace(/\s*[-–]\s*(deluxe|remaster|expanded|anniversary|edition|live|bonus|mono|stereo).*/i, '')
       .trim();
 
   const ownedTitles = new Set(vinyls.map((v) => normalizeTitle(v.title)).filter(Boolean));
   const ownedTitlesLoose = new Set(vinyls.map((v) => normalizeTitleLoose(v.title)).filter(Boolean));
+  // Artist+title pairs catch cases where both ID and isolated title checks fail
+  const ownedArtistTitlePairs = new Set(
+    vinyls.map((v) => `${normalizeArtist(v.artist)}|${normalizeTitleLoose(v.title)}`).filter(Boolean)
+  );
 
   function isOwned(release) {
+    const pair = `${normalizeArtist(release.artist)}|${normalizeTitleLoose(release.title)}`;
     return ownedMasterIds.has(release.id)
       || ownedDiscogsIds.has(release.id)
       || ownedTitles.has(normalizeTitle(release.title))
-      || ownedTitlesLoose.has(normalizeTitleLoose(release.title));
+      || ownedTitlesLoose.has(normalizeTitleLoose(release.title))
+      || ownedArtistTitlePairs.has(pair);
   }
-
-  // Normalize artist name: remove Discogs disambiguation suffixes like "(2)", "(3)"
-  const normalizeArtist = (name) => (name || '').replace(/\s*\(\d+\)\s*$/, '').toLowerCase().trim();
 
   // Section 1: all collected artists, fewest albums first — 1 best suggestion per artist
   // Deduplicate by normalized name so "David Bowie" and "David Bowie (2)" count as one
@@ -168,16 +174,22 @@ async function getRecommendations(vinyls) {
   // Use normalized names so "David Bowie (2)" is treated the same as "David Bowie"
   const suggestedArtists = new Set(byArtist.map((r) => normalizeArtist(r.artist)).filter(Boolean));
 
-  // Section 2: top genres + dominant decade, always sorted by want count
-  // Excludes artists already shown in section 1
+  // Section 2: top genres + dominant decade, sorted by want count, 1 album per artist, ~30 total
   const section2Genres = profile.genres.slice(0, 2);
   const byGenrePromises = section2Genres.map(async ({ name: genre, pct }) => {
     try {
-      const { releases } = await discogs.searchByGenreAndEra(genre, profile.topDecade, 'mainstream');
+      const { releases } = await discogs.searchByGenreAndEra(genre, profile.topDecade, 'mainstream', 50);
+      const seenGenreArtists = new Set();
       return releases
         .filter((r) => !isOwned(r) && r.cover_url && !suggestedArtists.has(normalizeArtist(r.artist)))
         .sort((a, b) => (Number(b.want) || 0) - (Number(a.want) || 0))
-        .slice(0, 5)
+        .filter((r) => {
+          const key = normalizeArtist(r.artist);
+          if (!key || seenGenreArtists.has(key)) return false;
+          seenGenreArtists.add(key);
+          return true;
+        })
+        .slice(0, 15)
         .map((r) => ({
           ...r,
           reason: `${genre} représente ${pct}% de ta collection`,

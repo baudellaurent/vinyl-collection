@@ -221,10 +221,10 @@ async function searchArtistId(artistName) {
  * @param {number|null} decade - e.g. 1970
  * @param {'mainstream'|'culte'} popularityTier
  */
-async function searchByGenreAndEra(genre, decade = null, popularityTier = 'mainstream') {
+async function searchByGenreAndEra(genre, decade = null, popularityTier = 'mainstream', perPage = 25) {
   const params = {
     type: 'master',
-    per_page: 25,
+    per_page: perPage,
     page: 1,
     token: TOKEN,
     sort: popularityTier === 'mainstream' ? 'want' : 'rating',
