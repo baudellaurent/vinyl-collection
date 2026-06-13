@@ -135,13 +135,19 @@ async function getRecommendations(vinyls) {
     }
   });
 
+  // Section 1 must resolve first so sections 2 & 3 can exclude already-suggested artists
+  const byArtistNested = await Promise.all(byArtistPromises);
+  const byArtist = byArtistNested.flat();
+  const suggestedArtists = new Set(byArtist.map((r) => r.artist).filter(Boolean));
+
   // Section 2: top genres + dominant decade, always sorted by want count
+  // Excludes artists already shown in section 1
   const section2Genres = profile.genres.slice(0, 2);
   const byGenrePromises = section2Genres.map(async ({ name: genre, pct }) => {
     try {
       const { releases } = await discogs.searchByGenreAndEra(genre, profile.topDecade, 'mainstream');
       return releases
-        .filter((r) => !isOwned(r) && r.cover_url)
+        .filter((r) => !isOwned(r) && r.cover_url && !suggestedArtists.has(r.artist))
         .sort((a, b) => (Number(b.want) || 0) - (Number(a.want) || 0))
         .slice(0, 5)
         .map((r) => ({
@@ -155,6 +161,7 @@ async function getRecommendations(vinyls) {
   });
 
   // Section 3: discovery — new artists, scored against taste profile
+  // Excludes artists already owned or shown in sections 1
   const discoveryPromise = (async () => {
     try {
       const topGenre = profile.genres[0]?.name;
@@ -165,7 +172,9 @@ async function getRecommendations(vinyls) {
       );
       const decade = profile.topDecade;
       return releases
-        .filter((r) => !isOwned(r) && r.cover_url && r.artist && !ownedArtists.has(r.artist))
+        .filter((r) => !isOwned(r) && r.cover_url && r.artist
+          && !ownedArtists.has(r.artist)
+          && !suggestedArtists.has(r.artist))
         .map((r) => ({
           ...r,
           _score: scoreForDiscovery(r, profile),
@@ -183,8 +192,7 @@ async function getRecommendations(vinyls) {
     }
   })();
 
-  const [byArtistNested, byGenreNested, byDiscovery] = await Promise.all([
-    Promise.all(byArtistPromises),
+  const [byGenreNested, byDiscovery] = await Promise.all([
     Promise.all(byGenrePromises),
     discoveryPromise,
   ]);
@@ -195,7 +203,7 @@ async function getRecommendations(vinyls) {
       topDecade: profile.topDecade,
       popularityTier: profile.popularityTier,
     },
-    byArtist: byArtistNested.flat(),
+    byArtist,
     byGenre: byGenreNested.flat(),
     byDiscovery,
   };
