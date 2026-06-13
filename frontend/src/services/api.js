@@ -87,4 +87,19 @@ export async function getDiscography(artistName, page = 1, sortOrder = 'weighted
   return data;
 }
 
+/** Get personalized recommendations based on the collection. */
+export async function getRecommendations() {
+  const { data } = await api.get('/recommendations');
+  return data;
+}
+
+/** Invalidate the recommendations cache (call after adding/removing a vinyl). */
+export async function invalidateRecommendationsCache() {
+  try {
+    await api.delete('/recommendations/cache');
+  } catch {
+    // non-blocking
+  }
+}
+
 export default api;

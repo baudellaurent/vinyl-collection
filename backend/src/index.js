@@ -8,6 +8,7 @@ const searchRoutes = require('./routes/search');
 const discographyRoutes = require('./routes/discography');
 const maintenanceRoutes = require('./routes/maintenance');
 const authRoutes = require('./routes/auth');
+const recommendationsRoutes = require('./routes/recommendations');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,6 +52,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/collection', collectionRoutes);
 app.use('/api/search', apiLimiter, searchRoutes);
 app.use('/api/discography', apiLimiter, discographyRoutes);
+app.use('/api/recommendations', apiLimiter, recommendationsRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 
 // 404 handler

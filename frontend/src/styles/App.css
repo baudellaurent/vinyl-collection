@@ -698,3 +698,159 @@ img {
 .flex-center { display: flex; align-items: center; justify-content: center; }
 .gap-8 { gap: 8px; }
 .gap-12 { gap: 12px; }
+
+/* ===== Recommendations ===== */
+.reco-profile {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 24px;
+  border-left: 3px solid var(--accent);
+}
+
+.reco-profile-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.reco-profile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reco-chip {
+  font-size: 0.75rem;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 20px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+}
+
+.reco-chip--era {
+  color: var(--warning);
+  border-color: rgba(255, 152, 0, 0.3);
+}
+
+.reco-chip--mainstream {
+  color: var(--accent);
+  border-color: rgba(233, 69, 96, 0.3);
+}
+
+.reco-chip--culte {
+  color: #7c83fd;
+  border-color: rgba(124, 131, 253, 0.3);
+}
+
+.reco-section {
+  margin-bottom: 28px;
+}
+
+.reco-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.reco-section-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.reco-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reco-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.reco-card {
+  flex: 0 0 130px;
+  scroll-snap-align: start;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+  position: relative;
+  box-shadow: var(--shadow);
+}
+
+.reco-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.reco-card-cover {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--bg-secondary);
+}
+
+.reco-card-cover--placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.reco-card-info {
+  padding: 8px 10px 10px;
+}
+
+.reco-card-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.reco-card-artist {
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reco-card-year {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.reco-item-reason {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.reco-modal-reason {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}

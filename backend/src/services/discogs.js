@@ -215,10 +215,52 @@ async function searchArtistId(artistName) {
   return String(results[0].id);
 }
 
+/**
+ * Search Discogs masters by genre and optional decade, sorted by popularity tier.
+ * @param {string} genre - Discogs genre name (e.g. 'Rock', 'Jazz')
+ * @param {number|null} decade - e.g. 1970
+ * @param {'mainstream'|'culte'} popularityTier
+ */
+async function searchByGenreAndEra(genre, decade = null, popularityTier = 'mainstream') {
+  const params = {
+    type: 'master',
+    per_page: 25,
+    page: 1,
+    token: TOKEN,
+    sort: popularityTier === 'mainstream' ? 'want' : 'rating',
+    sort_order: 'desc',
+  };
+
+  if (genre) params.genre = genre;
+  if (decade) params.year = `${decade}-${decade + 9}`;
+
+  const response = await client.get('/database/search', { params });
+  const results = (response.data.results || []).filter((r) => !hasNonLatinChars(r.title));
+
+  const releases = results.map((item) => {
+    const rawTitle = item.title || '';
+    const cleanTitle = rawTitle.replace(/^[^-]+ - /i, '').trim() || rawTitle;
+    return {
+      id: String(item.id || ''),
+      title: cleanTitle,
+      artist: extractArtistFromTitle(item.title) || '',
+      year: item.year || null,
+      cover_url: item.cover_image || item.thumb || null,
+      genre: Array.isArray(item.genre) ? item.genre[0] : null,
+      want: item.community?.want || null,
+      rating: item.community?.rating?.average || null,
+      rating_count: item.community?.rating?.count || null,
+    };
+  });
+
+  return { releases };
+}
+
 module.exports = {
   searchByBarcode,
   searchByArtistAlbum,
   searchArtistId,
   getRelease,
   getArtistMasters,
+  searchByGenreAndEra,
 };

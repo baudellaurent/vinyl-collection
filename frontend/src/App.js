@@ -8,6 +8,7 @@ import Search from './pages/Search';
 import Settings from './pages/Settings';
 import AlbumDetail from './pages/AlbumDetail';
 import Discography from './pages/Discography';
+import Recommendations from './pages/Recommendations';
 import Login from './pages/Login';
 import Help from './pages/Help';
 import { VERSION, BUILD_DATE } from './components/Footer';
@@ -27,6 +28,10 @@ function BottomNav() {
         <NavLink to="/search" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} aria-label="Recherche">
           <span className="nav-icon">🔍</span>
           <span>Recherche</span>
+        </NavLink>
+        <NavLink to="/recommendations" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} aria-label="Recommandations">
+          <span className="nav-icon">💡</span>
+          <span>Pour toi</span>
         </NavLink>
         <NavLink to="/settings" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} aria-label="Paramètres">
           <span className="nav-icon">⚙️</span>
@@ -71,6 +76,7 @@ function AppContent() {
           <Route path="/search" element={<Search />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
           <Route path="/discography/:artist" element={<Discography />} />
         </Routes>
