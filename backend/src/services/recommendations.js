@@ -98,52 +98,51 @@ async function getRecommendations(vinyls) {
     return ownedMasterIds.has(release.id) || ownedDiscogsIds.has(release.id);
   }
 
-  // Section 1: all collected artists, fewest albums first — suggest albums better ranked than owned ones
+  // Section 1: all collected artists, fewest albums first — 1 best suggestion per artist
   const section1Artists = [...profile.topArtists]
     .sort((a, b) => a.count - b.count) // fewest owned first
-    .slice(0, 5);
+    .slice(0, 12);
 
   const byArtistPromises = section1Artists.map(async ({ name, count }) => {
     try {
       const { releases } = await discogs.getArtistMasters(name, 1, 'weighted');
 
-      // Find the best position (lowest index = most popular) among owned albums in the ranked list
+      // Find the best position (lowest index = most popular) among owned albums
       const ownedIndexes = releases
         .map((r, i) => ({ r, i }))
         .filter(({ r }) => isOwned(r))
         .map(({ i }) => i);
       const bestOwnedIndex = ownedIndexes.length > 0 ? Math.min(...ownedIndexes) : Infinity;
 
-      // Suggest only albums ranked higher (lower index) than the best owned one
+      // Only albums ranked higher than the best owned one
       let suggestions = releases.filter((r, i) => !isOwned(r) && r.cover_url && i < bestOwnedIndex);
 
-      // Fallback: if nothing beats owned rank, show top unowned anyway
+      // Fallback: top unowned if nothing beats owned rank
       if (suggestions.length === 0) {
         suggestions = releases.filter((r) => !isOwned(r) && r.cover_url);
       }
 
-      const reason = count === 1
-        ? `Tu as 1 album de ${name} — voici les plus convoités que tu n'as pas`
-        : `Tu as ${count} albums de ${name} — mieux classés que ceux que tu possèdes`;
+      const top = suggestions[0];
+      if (!top) return [];
 
-      return suggestions.slice(0, 4).map((r) => ({
-        ...r,
-        artist: name,
-        reason,
-        section: 'byArtist',
-      }));
+      const reason = count === 1
+        ? `Tu as 1 album de ${name} — le plus convoité que tu n'as pas`
+        : `Tu as ${count} albums de ${name} — mieux classé que ceux que tu possèdes`;
+
+      return [{ ...top, artist: name, reason, section: 'byArtist' }];
     } catch {
       return [];
     }
   });
 
-  // Section 2: top genres + dominant decade for more accurate results
+  // Section 2: top genres + dominant decade, always sorted by want count
   const section2Genres = profile.genres.slice(0, 2);
   const byGenrePromises = section2Genres.map(async ({ name: genre, pct }) => {
     try {
-      const { releases } = await discogs.searchByGenreAndEra(genre, profile.topDecade, profile.popularityTier);
+      const { releases } = await discogs.searchByGenreAndEra(genre, profile.topDecade, 'mainstream');
       return releases
         .filter((r) => !isOwned(r) && r.cover_url)
+        .sort((a, b) => (Number(b.want) || 0) - (Number(a.want) || 0))
         .slice(0, 5)
         .map((r) => ({
           ...r,
@@ -173,7 +172,10 @@ async function getRecommendations(vinyls) {
           reason: `Dans le style ${topGenre || ''} des années ${decade} que tu collectionnes`,
           section: 'byDiscovery',
         }))
-        .sort((a, b) => b._score - a._score)
+        .sort((a, b) => {
+          if (b._score !== a._score) return b._score - a._score;
+          return (Number(b.want) || 0) - (Number(a.want) || 0);
+        })
         .slice(0, 8)
         .map(({ _score, ...r }) => r);
     } catch {
