@@ -98,30 +98,50 @@ async function getRecommendations(vinyls) {
     return ownedMasterIds.has(release.id) || ownedDiscogsIds.has(release.id);
   }
 
-  // Section 1: complete your artists (artists with ≥2 albums, max 3)
-  const section1Artists = profile.topArtists.filter((a) => a.count >= 2).slice(0, 3);
+  // Section 1: all collected artists, fewest albums first — suggest albums better ranked than owned ones
+  const section1Artists = [...profile.topArtists]
+    .sort((a, b) => a.count - b.count) // fewest owned first
+    .slice(0, 5);
+
   const byArtistPromises = section1Artists.map(async ({ name, count }) => {
     try {
       const { releases } = await discogs.getArtistMasters(name, 1, 'weighted');
-      return releases
-        .filter((r) => !isOwned(r) && r.cover_url)
-        .slice(0, 4)
-        .map((r) => ({
-          ...r,
-          artist: name,
-          reason: `Tu possèdes ${count} album${count > 1 ? 's' : ''} de ${name}`,
-          section: 'byArtist',
-        }));
+
+      // Find the best position (lowest index = most popular) among owned albums in the ranked list
+      const ownedIndexes = releases
+        .map((r, i) => ({ r, i }))
+        .filter(({ r }) => isOwned(r))
+        .map(({ i }) => i);
+      const bestOwnedIndex = ownedIndexes.length > 0 ? Math.min(...ownedIndexes) : Infinity;
+
+      // Suggest only albums ranked higher (lower index) than the best owned one
+      let suggestions = releases.filter((r, i) => !isOwned(r) && r.cover_url && i < bestOwnedIndex);
+
+      // Fallback: if nothing beats owned rank, show top unowned anyway
+      if (suggestions.length === 0) {
+        suggestions = releases.filter((r) => !isOwned(r) && r.cover_url);
+      }
+
+      const reason = count === 1
+        ? `Tu as 1 album de ${name} — voici les plus convoités que tu n'as pas`
+        : `Tu as ${count} albums de ${name} — mieux classés que ceux que tu possèdes`;
+
+      return suggestions.slice(0, 4).map((r) => ({
+        ...r,
+        artist: name,
+        reason,
+        section: 'byArtist',
+      }));
     } catch {
       return [];
     }
   });
 
-  // Section 2: top genres (top 2, max 5 per genre)
+  // Section 2: top genres + dominant decade for more accurate results
   const section2Genres = profile.genres.slice(0, 2);
   const byGenrePromises = section2Genres.map(async ({ name: genre, pct }) => {
     try {
-      const { releases } = await discogs.searchByGenreAndEra(genre, null, profile.popularityTier);
+      const { releases } = await discogs.searchByGenreAndEra(genre, profile.topDecade, profile.popularityTier);
       return releases
         .filter((r) => !isOwned(r) && r.cover_url)
         .slice(0, 5)
