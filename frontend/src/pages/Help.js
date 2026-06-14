@@ -43,6 +43,31 @@ const sections = [
 • Boutons Précédent / Suivant pour naviguer`,
   },
   {
+    icon: '💡',
+    title: 'Pour toi — Recommandations',
+    content: `Des suggestions personnalisées basées sur l'analyse de votre collection.
+
+• Profil musical calculé automatiquement : genres dominants, décennie préférée, préférence mainstream ou culte
+• Les achats récents pèsent plus lourd dans l'analyse (les goûts évoluent)
+
+Section "Complète tes artistes" :
+→ Pour chaque artiste de votre collection, l'album le plus convoité sur Discogs que vous ne possédez pas encore
+→ Ne propose que des albums mieux classés que ceux que vous avez déjà
+→ Couvre jusqu'à 30 artistes, par ordre du moins au plus fourni dans la collection
+
+Section "Dans ton style" :
+→ Albums les plus demandés dans vos genres et décennie dominants
+→ Un seul album par artiste, jusqu'à 30 suggestions
+→ Aucun album déjà possédé, aucun artiste déjà proposé en section 1
+
+Section "Nouvelles découvertes" :
+→ Artistes absents de votre collection, scorés selon votre profil (genre + ère + popularité)
+→ Idéal pour sortir des sentiers battus tout en restant dans votre style
+
+• Cliquez sur un album pour l'ajouter directement à votre collection
+• Les recommandations sont mises en cache 10 minutes côté serveur`,
+  },
+  {
     icon: '⚙️',
     title: 'Réglages',
     content: `Personnalisez votre expérience.
