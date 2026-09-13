@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.API_KEY;
-const JWT_EXPIRES = '24h';
+const JWT_EXPIRES = '365d';
 const TEST_EXPIRES = '2h';
 
 // Credentials from env

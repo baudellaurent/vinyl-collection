@@ -143,7 +143,7 @@ function Login() {
           color: 'var(--text-muted)',
           marginTop: 24,
         }}>
-          La session personnelle est valide 24h.<br/>
+          La session personnelle est valide 1 an.<br/>
           Le mode test est valide 2h et ne sauvegarde rien.
         </p>
 

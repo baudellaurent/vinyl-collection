@@ -21,8 +21,10 @@ export function AuthProvider({ children }) {
   });
 
   const login = (token, mode, expiresIn = '24h') => {
-    const hours = expiresIn === '24h' ? 24 : 2;
-    const expiresAt = Date.now() + hours * 60 * 60 * 1000;
+    const match = /^(\d+)([hd])$/.exec(expiresIn);
+    const msPerUnit = { h: 60 * 60 * 1000, d: 24 * 60 * 60 * 1000 };
+    const durationMs = match ? Number(match[1]) * msPerUnit[match[2]] : 24 * 60 * 60 * 1000;
+    const expiresAt = Date.now() + durationMs;
     const authData = { token, mode, expiresAt };
     localStorage.setItem(AUTH_KEY, JSON.stringify(authData));
     setAuth(authData);
