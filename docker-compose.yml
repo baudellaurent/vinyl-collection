@@ -22,6 +22,9 @@ services:
       DISCOGS_TOKEN: ${DISCOGS_TOKEN}
       API_KEY: ${API_KEY}
       PORT: 3001
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "127.0.0.1:3001:3001"
     depends_on:
